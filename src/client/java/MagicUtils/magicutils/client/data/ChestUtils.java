@@ -26,7 +26,7 @@ public class ChestUtils {
         BlockState state = world.getBlockState(basePos);
         Block block = state.getBlock();
 
-        if (!(block instanceof ChestBlock chestBlock)) return List.of();
+        if (!(block instanceof ChestBlock)) return List.of();
 
         if (!state.contains(Properties.CHEST_TYPE) || !state.contains(Properties.HORIZONTAL_FACING)) {
             MagicUtilsClient.LOGGER.info("GetConnectedChestsPositions found 1 single chest. at pos: {}",basePos);
@@ -47,7 +47,7 @@ public class ChestUtils {
             MagicUtilsClient.LOGGER.info("chest position: " + basePos);
             return List.of(basePos);
         }
-
+        //test comment
         BlockPos otherPos = basePos;
 
         switch (facing) {
