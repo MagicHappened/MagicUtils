@@ -18,3 +18,8 @@ not yet lol
 not yet either lol
 
 ## ⚙️ Configuration
+
+some config options
+
+# Uncategorized
+yes i got this readme from chatgpt lol
