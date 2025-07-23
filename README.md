@@ -1,6 +1,6 @@
 # MagicUtils
 
-**MagicUtils** is a client-side Fabric mod for Minecraft 1.21.5 that adds helpful utility features, like chest logging and other magic tweaks.
+**MagicUtils** is a client-side Fabric mod for Minecraft 1.21.5 that adds helpful utility features
 
 ## ✨ Features
 
