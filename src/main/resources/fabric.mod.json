@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "id": "magicutils",
+  "version": "${version}",
+  "name": "MagicUtils",
+  "description": "",
+  "authors": [],
+  "contact": {},
+  "license": "All-Rights-Reserved",
+  "icon": "assets/MagicUtils/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "fabric-datagen": [
+      "MagicUtils.magicutils.client.MagicUtilsDataGenerator"
+    ],
+    "client": [
+      "MagicUtils.magicutils.client.MagicUtilsClient"
+    ],
+    "modmenu": [
+      "MagicUtils.magicutils.client.config.MagicUtilsModMenuCompat"
+    ]
+  },
+  "mixins": [
+    "magicutils.client.mixins.json"
+  ],
+
+  "depends": {
+    "fabricloader": ">=0.15.0",
+    "minecraft": "${minecraft_version}",
+    "fabric": "*",
+    "fabric-command-api-v2": "*"
+  },
+  "recommends": {
+    "modmenu": "*",
+    "cloth-config": "*"
+  },
+  "custom": {
+    "modmenu": {
+      "parent": "magicutils",
+      "modmenuApi": "MagicUtils.magicutils.client.config.MagicUtilsModMenuCompat"
+    }
+  }
+}

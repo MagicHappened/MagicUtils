@@ -1,0 +1,37 @@
+# Gradle build directories and caches
+.gradle/
+build/
+out/
+run/
+
+# IntelliJ IDEA project files
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Eclipse project files
+.settings/
+bin/
+
+# Logs and crash reports
+*.log
+logs/
+crash-reports/
+
+# Fabric / Minecraft specific
+*.lock
+*.jar
+
+# Compiled Java class files
+*.class
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Temporary and editor swap files
+*.tmp
+*.temp
+*.swp
+*.swo
