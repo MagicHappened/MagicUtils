@@ -10,6 +10,8 @@ import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
+import net.minecraft.registry.DynamicRegistryManager;
+import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.screen.GenericContainerScreenHandler;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.util.math.BlockPos;
@@ -17,7 +19,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.registry.RegistryOps;
 import java.util.List;
 import java.util.Objects;
 @Mixin(HandledScreen.class)
@@ -42,12 +45,17 @@ public class HandledScreenMixin<T extends ScreenHandler> {
 
         if (handler instanceof GenericContainerScreenHandler genericHandler) {
             NbtList itemsList = new NbtList();
+
+            RegistryWrapper.WrapperLookup lookup = MinecraftClient.getInstance()
+                    .getNetworkHandler()
+                    .getRegistryManager();
+
             for (int i = 0; i < genericHandler.getInventory().size(); i++) {
                 ItemStack stack = genericHandler.getInventory().getStack(i);
                 if (!stack.isEmpty()) {
                     NbtCompound itemData = new NbtCompound();
                     itemData.putInt("Slot", i);
-                    itemData.put("Item", stack.writeNbt(new NbtCompound()));
+                    itemData.put("Item", stack.toNbt(lookup));
                     itemsList.add(itemData);
                 }
             }

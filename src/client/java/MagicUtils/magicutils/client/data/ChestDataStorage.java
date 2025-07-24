@@ -2,15 +2,15 @@ package MagicUtils.magicutils.client.data;
 
 import MagicUtils.magicutils.client.MagicUtilsClient;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtIo;
-import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.*;
 import net.minecraft.util.math.BlockPos;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+
+import static org.apache.commons.lang3.BooleanUtils.forEach;
 
 public class ChestDataStorage {
     private static final Path DATA_FOLDER = FabricLoader.getInstance().getGameDir().resolve("magicutils_data");
@@ -30,7 +30,9 @@ public class ChestDataStorage {
             Path chestFile = DATA_FOLDER.resolve(key + ".dat");
             NbtCompound root = new NbtCompound();
             root.put("Items", contents);
-            NbtIo.writeCompressed(root, chestFile.toFile().toPath());
+            try (var out = Files.newOutputStream(chestFile)) {
+                NbtIo.writeCompressed(root, out);
+            }
         } catch (IOException e) {
             MagicUtilsClient.LOGGER.error("Failed to save chest data for key {}: {}", key, e);
         }
@@ -44,11 +46,9 @@ public class ChestDataStorage {
             Files.list(DATA_FOLDER)
                     .filter(p -> p.toString().endsWith(".dat"))
                     .forEach(p -> {
-                        try {
-                            try (var out = Files.newOutputStream(chestFile)) {
-                                NbtIo.writeCompressed(root, out);
-                            }
-                            NbtList items = root.getList("Items", NbtCompound.COMPOUND_TYPE);
+                        try (var in = Files.newInputStream(p)) {
+                            NbtCompound root = NbtIo.readCompressed(in, NbtSizeTracker.ofUnlimitedBytes());
+                            NbtList items = root.getList("Items").orElse(new NbtList());
                             String key = p.getFileName().toString().replace(".dat", "");
                             loaded.put(key, items);
                         } catch (IOException e) {
