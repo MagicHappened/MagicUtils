@@ -20,7 +20,6 @@ public class ChestDataStorage {
         String key = getKeyFromPositions(positions);
         chestData.put(key, contents);
         saveChestData(key, contents);
-        saveChestData(key, contents);
     }
 
     private static void saveChestData(String key, NbtList contents) {
