@@ -35,6 +35,7 @@ public class ItemScreen extends Screen {
     public ItemScreen(Text title){
         super(title);
         // Fill with dummy items for demo
+        //
         for (int i = 0; i < 54; i++) {
             displayedItems.add(new ItemStack(i % 2 == 0 ? Items.DIAMOND : Items.APPLE));
         }
@@ -54,7 +55,7 @@ public class ItemScreen extends Screen {
                 this.textRenderer, x+7, y+5, boxWidth, boxHeight, Text.literal("Search")
         );
         searchBox.setChangedListener(text -> {
-            filter = text.toLowerCase();
+            filter = text;
             //updateFilteredItems(); not yet :D
         });
 
