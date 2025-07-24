@@ -19,8 +19,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import net.minecraft.nbt.NbtOps;
-import net.minecraft.registry.RegistryOps;
+
 import java.util.List;
 import java.util.Objects;
 @Mixin(HandledScreen.class)

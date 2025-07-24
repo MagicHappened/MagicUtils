@@ -18,11 +18,11 @@ public class MagicUtilsConfig {
     private static MagicUtilsConfig INSTANCE;
 
     // Example setting
-    public Boolean SidebarTooltip = false;
-    public Boolean UpdateOnWorldChange = true;
-    public General.SearchPriorityMode searchPriorityMode = General.SearchPriorityMode.NEAREST_FIRST;
-    public UI.SortingMode sortingMode = UI.SortingMode.Quantity;
-    public UI.SortingOrder sortingOrder = UI.SortingOrder.Descending;
+    public static Boolean SidebarTooltip = false;
+    public static int searchRange = 50;
+    public static General.SearchPriorityMode searchPriorityMode = General.SearchPriorityMode.NEAREST_FIRST;
+    public static UI.SortingMode sortingMode = UI.SortingMode.Quantity;
+    public static UI.SortingOrder sortingOrder = UI.SortingOrder.Descending;
 
     public static MagicUtilsConfig get() {
         if (INSTANCE == null) {
