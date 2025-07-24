@@ -21,5 +21,5 @@ not yet either lol
 
 some config options
 
-# Uncategorized
+## Uncategorized
 yes i got this readme from chatgpt lol
