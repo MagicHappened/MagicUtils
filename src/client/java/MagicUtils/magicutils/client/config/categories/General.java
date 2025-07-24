@@ -13,9 +13,9 @@ public class General {
         ConfigEntryBuilder entryBuilder = builder.entryBuilder();
 
 
-        general.addEntry(entryBuilder.startBooleanToggle(Text.literal("TestValue"), config.TestValue)
+        general.addEntry(entryBuilder.startBooleanToggle(Text.literal("UpdateOnWorldChange"), config.UpdateOnWorldChange)
                 .setDefaultValue(false)
-                .setSaveConsumer(newValue -> config.TestValue = newValue)
+                .setSaveConsumer(newValue -> config.UpdateOnWorldChange = newValue)
                 .build());
 
         // ^^ example of how to add entries

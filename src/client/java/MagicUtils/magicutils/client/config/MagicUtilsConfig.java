@@ -17,7 +17,7 @@ public class MagicUtilsConfig {
 
     // Example setting
     public Boolean SidebarTooltip = false;
-    public Boolean TestValue = false;
+    public Boolean UpdateOnWorldChange = true;
 
     public static MagicUtilsConfig get() {
         if (INSTANCE == null) {
