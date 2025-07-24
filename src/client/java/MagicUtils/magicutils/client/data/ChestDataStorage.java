@@ -13,9 +13,12 @@ import java.util.*;
 import static org.apache.commons.lang3.BooleanUtils.forEach;
 
 public class ChestDataStorage {
-    private static final Path DATA_FOLDER = FabricLoader.getInstance().getGameDir().resolve("magicutils_data");
     private static final Map<String, NbtList> chestData = new HashMap<>();
 
+
+    private static Path getDataFolder() {
+        return MagicUtilsDataHandler.getCurrentContextSaveDir();
+    }
     public static void addChestContents(List<BlockPos> positions, NbtList contents) {
         String key = getKeyFromPositions(positions);
         chestData.put(key, contents);
@@ -24,11 +27,15 @@ public class ChestDataStorage {
 
     private static void saveChestData(String key, NbtList contents) {
         try {
-            if (!Files.exists(DATA_FOLDER)) Files.createDirectories(DATA_FOLDER);
+            Path dataFolder = getDataFolder();
+            if (!Files.exists(dataFolder)) {
+                Files.createDirectories(dataFolder);
+            }
 
-            Path chestFile = DATA_FOLDER.resolve(key + ".dat");
+            Path chestFile = dataFolder.resolve(key + ".dat");
             NbtCompound root = new NbtCompound();
             root.put("Items", contents);
+
             try (var out = Files.newOutputStream(chestFile)) {
                 NbtIo.writeCompressed(root, out);
             }
@@ -38,11 +45,12 @@ public class ChestDataStorage {
     }
 
     public static Map<String, NbtList> loadAllChestData() {
-        if (!Files.exists(DATA_FOLDER)) return Collections.emptyMap();
+        Path dataFolder = MagicUtilsDataHandler.getCurrentContextSaveDir();
+        if (!Files.exists(dataFolder)) return Collections.emptyMap();
 
         Map<String, NbtList> loaded = new HashMap<>();
         try {
-            Files.list(DATA_FOLDER)
+            Files.list(dataFolder)
                     .filter(p -> p.toString().endsWith(".dat"))
                     .forEach(p -> {
                         try (var in = Files.newInputStream(p)) {

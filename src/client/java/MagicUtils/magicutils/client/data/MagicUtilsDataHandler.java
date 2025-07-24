@@ -25,24 +25,17 @@ public class MagicUtilsDataHandler {
     public static Path getCurrentContextSaveDir() {
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.isInSingleplayer()) {
-            String levelName = client.getServer().getSaveProperties().getLevelName(); // example: "New World"
+            String levelName = client.getServer().getSaveProperties().getLevelName(); // e.g., "New World"
             return DATA_FOLDER.resolve("singleplayer").resolve(levelName);
         } else if (client.getCurrentServerEntry() != null) {
-            String address = client.getCurrentServerEntry().address; // e.g., play.example.net
-            String encoded = hashAddress(address);
-            return DATA_FOLDER.resolve("multiplayer").resolve(encoded);
+            String address = client.getCurrentServerEntry().address; // e.g., "play.example.net:25565"
+            String safeName = sanitizeServerAddress(address);
+            return DATA_FOLDER.resolve("multiplayer").resolve(safeName);
         }
         return DATA_FOLDER.resolve("unknown");
     }
 
-    private static String hashAddress(String address) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(address.getBytes());
-            return Base64.getUrlEncoder().withoutPadding().encodeToString(hash);
-        } catch (Exception e) {
-            MagicUtilsClient.LOGGER.error("Error hashing address: {}", address, e);
-            return "unknown_server";
-        }
+    private static String sanitizeServerAddress(String address) {
+        return address.replace(":", "_");
     }
 }
