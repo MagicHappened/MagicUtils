@@ -4,13 +4,10 @@ import MagicUtils.magicutils.client.MagicUtilsClient;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.nbt.*;
 import net.minecraft.util.math.BlockPos;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-
-import static org.apache.commons.lang3.BooleanUtils.forEach;
 
 public class ChestDataStorage {
     private static final Path DATA_FOLDER = FabricLoader.getInstance().getGameDir().resolve("magicutils_data");
@@ -19,7 +16,6 @@ public class ChestDataStorage {
     public static void addChestContents(List<BlockPos> positions, NbtList contents) {
         String key = getKeyFromPositions(positions);
         chestData.put(key, contents);
-        saveChestData(key, contents);
         saveChestData(key, contents);
     }
 
