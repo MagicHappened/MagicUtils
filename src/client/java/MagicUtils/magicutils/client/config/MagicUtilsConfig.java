@@ -1,5 +1,6 @@
 package MagicUtils.magicutils.client.config;
 import MagicUtils.magicutils.client.MagicUtilsClient;
+import MagicUtils.magicutils.client.config.categories.General;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -18,6 +19,7 @@ public class MagicUtilsConfig {
     // Example setting
     public Boolean SidebarTooltip = false;
     public Boolean UpdateOnWorldChange = true;
+    public General.SearchPriorityMode searchPriorityMode = General.SearchPriorityMode.NEAREST_FIRST;
 
     public static MagicUtilsConfig get() {
         if (INSTANCE == null) {
