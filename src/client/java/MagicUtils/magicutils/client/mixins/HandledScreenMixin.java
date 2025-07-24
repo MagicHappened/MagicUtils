@@ -8,6 +8,8 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtList;
 import net.minecraft.screen.GenericContainerScreenHandler;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.util.math.BlockPos;
@@ -18,7 +20,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
 import java.util.Objects;
-
 @Mixin(HandledScreen.class)
 public class HandledScreenMixin<T extends ScreenHandler> {
 
@@ -39,23 +40,18 @@ public class HandledScreenMixin<T extends ScreenHandler> {
         List<BlockPos> positions = ChestTracker.syncIdToChestPositions.remove(syncId);
         if (positions == null || positions.isEmpty()) return;
 
-        MagicUtilsClient.LOGGER.info("Chest Closed at : ");
-        for (BlockPos pos : positions) {
-            MagicUtilsClient.LOGGER.info("  - " + pos);
-        }
-
-
-
-        ChestDataStorage.saveChests(positions);
-
         if (handler instanceof GenericContainerScreenHandler genericHandler) {
-            MagicUtilsClient.LOGGER.info("Contents: ");
+            NbtList itemsList = new NbtList();
             for (int i = 0; i < genericHandler.getInventory().size(); i++) {
                 ItemStack stack = genericHandler.getInventory().getStack(i);
                 if (!stack.isEmpty()) {
-                    MagicUtilsClient.LOGGER.info("  Slot " + i + ": " + stack.getCount() + "x " + stack.getName().getString());
+                    NbtCompound itemData = new NbtCompound();
+                    itemData.putInt("Slot", i);
+                    itemData.put("Item", stack.writeNbt(new NbtCompound()));
+                    itemsList.add(itemData);
                 }
             }
+            ChestDataStorage.addChestContents(positions, itemsList);
         }
     }
 }

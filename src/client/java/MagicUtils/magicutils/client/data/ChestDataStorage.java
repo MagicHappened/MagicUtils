@@ -1,43 +1,73 @@
 package MagicUtils.magicutils.client.data;
 
 import MagicUtils.magicutils.client.MagicUtilsClient;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
+import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtIo;
+import net.minecraft.nbt.NbtList;
 import net.minecraft.util.math.BlockPos;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
-import java.nio.file.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
 
 public class ChestDataStorage {
-    private static final Gson GSON = new Gson();
-    private static final String FILE_NAME = "chests.json";
+    private static final Path DATA_FOLDER = FabricLoader.getInstance().getGameDir().resolve("magicutils_data");
+    private static final Map<String, NbtList> chestData = new HashMap<>();
 
-    private static final Type LIST_TYPE = new TypeToken<List<BlockPos>>() {}.getType();
+    public static void addChestContents(List<BlockPos> positions, NbtList contents) {
+        String key = getKeyFromPositions(positions);
+        chestData.put(key, contents);
+        saveChestData(key, contents);
+        saveChestData(key, contents);
+    }
 
-    public static void saveChests(List<BlockPos> positions) {
-        Path dir = MagicUtilsDataHandler.getCurrentContextSaveDir();
+    private static void saveChestData(String key, NbtList contents) {
         try {
-            Files.createDirectories(dir);
-            Path file = dir.resolve(FILE_NAME);
-            String json = GSON.toJson(positions, LIST_TYPE);
-            Files.writeString(file, json, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            if (!Files.exists(DATA_FOLDER)) Files.createDirectories(DATA_FOLDER);
+
+            Path chestFile = DATA_FOLDER.resolve(key + ".dat");
+            NbtCompound root = new NbtCompound();
+            root.put("Items", contents);
+            NbtIo.writeCompressed(root, chestFile.toFile().toPath());
         } catch (IOException e) {
-            MagicUtilsClient.LOGGER.error("Failed to save chest data", e);
+            MagicUtilsClient.LOGGER.error("Failed to save chest data for key {}: {}", key, e);
         }
     }
 
-    public static List<BlockPos> loadChests() {
-        Path file = MagicUtilsDataHandler.getCurrentContextSaveDir().resolve(FILE_NAME);
-        if (!Files.exists(file)) return new ArrayList<>();
+    public static Map<String, NbtList> loadAllChestData() {
+        if (!Files.exists(DATA_FOLDER)) return Collections.emptyMap();
+
+        Map<String, NbtList> loaded = new HashMap<>();
         try {
-            String json = Files.readString(file);
-            return GSON.fromJson(json, LIST_TYPE);
+            Files.list(DATA_FOLDER)
+                    .filter(p -> p.toString().endsWith(".dat"))
+                    .forEach(p -> {
+                        try {
+                            try (var out = Files.newOutputStream(chestFile)) {
+                                NbtIo.writeCompressed(root, out);
+                            }
+                            NbtList items = root.getList("Items", NbtCompound.COMPOUND_TYPE);
+                            String key = p.getFileName().toString().replace(".dat", "");
+                            loaded.put(key, items);
+                        } catch (IOException e) {
+                            MagicUtilsClient.LOGGER.error("Failed to load chest data from file {}: {}", p, e);
+                        }
+                    });
         } catch (IOException e) {
-            MagicUtilsClient.LOGGER.error("Failed to load chest data", e);
-            return new ArrayList<>();
+            MagicUtilsClient.LOGGER.error("Failed to read chest data folder: {}", e);
         }
+
+        return loaded;
+    }
+
+    private static String getKeyFromPositions(List<BlockPos> positions) {
+        List<String> sorted = positions.stream()
+                .map(pos -> pos.getX() + "," + pos.getY() + "," + pos.getZ())
+                .sorted()
+                .toList();
+
+        return String.join("__", sorted);
     }
 }
