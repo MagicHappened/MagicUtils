@@ -2,6 +2,7 @@ package MagicUtils.magicutils.client.ui.custom.screen;
 
 import MagicUtils.magicutils.client.MagicUtilsClient;
 import MagicUtils.magicutils.client.config.MagicUtilsConfig;
+import MagicUtils.magicutils.client.ui.custom.overlay.ChestHighlighter;
 import net.minecraft.registry.RegistryOps;
 import MagicUtils.magicutils.client.config.categories.UI;
 import MagicUtils.magicutils.client.data.ChestDataStorage;
@@ -185,6 +186,35 @@ public class ItemScreen extends Screen {
 
     private boolean isPointWithin(int mouseX, int mouseY, int x, int y) {
         return mouseX >= x && mouseX <= x + 16 && mouseY >= y && mouseY <= y + 16;
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (super.mouseClicked(mouseX, mouseY, button)) return true;
+
+        int x = (this.width - backgroundWidth) >> 1;
+        int y = (this.height - backgroundHeight) >> 1;
+
+        for (int row = 0; row < rows; row++) {
+            for (int col = 0; col < columns; col++) {
+                int index = row * columns + col;
+                if (index >= displayedItems.size()) continue;
+
+                int slotX = x + 8 + col * slotSize;
+                int slotY = y + 18 + row * slotSize;
+
+                if (isPointWithin((int) mouseX, (int) mouseY, slotX, slotY)) {
+                    ItemStack clickedStack = displayedItems.get(index);
+                    if (!clickedStack.isEmpty()) {
+                        MagicUtilsClient.LOGGER.info("Item clicked: " + clickedStack.getItem().toString());
+                        ChestHighlighter.onItemClicked(clickedStack);
+                    }
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     @Override

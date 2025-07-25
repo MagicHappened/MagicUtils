@@ -1,7 +1,9 @@
 package MagicUtils.magicutils.client.data;
 
 import MagicUtils.magicutils.client.MagicUtilsClient;
+import MagicUtils.magicutils.client.config.MagicUtilsConfig;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.*;
@@ -140,6 +142,75 @@ public class ChestDataStorage {
         }
         return aggregated;
     }
+
+    public static Set<Set<BlockPos>> findGroupedChestsWithItem(ItemStack filterStack) {
+        Set<Set<BlockPos>> result = new HashSet<>();
+        if (filterStack == null || filterStack.isEmpty()) return result;
+
+        Item filterItem = filterStack.getItem();
+        BlockPos playerPos = MinecraftClient.getInstance().player.getBlockPos();
+        int range = MagicUtilsConfig.searchRange;
+
+        Map<String, NbtList> allChestData = loadAllChestData();
+        var registryManager = MinecraftClient.getInstance().getNetworkHandler() != null
+                ? MinecraftClient.getInstance().getNetworkHandler().getRegistryManager()
+                : null;
+        if (registryManager == null) return Set.of();
+
+        RegistryWrapper.WrapperLookup lookup = registryManager;
+        for (Map.Entry<String, NbtList> entry : allChestData.entrySet()) {
+            String key = entry.getKey();
+            NbtList nbtList = entry.getValue();
+
+            boolean containsItem = false;
+
+            for (NbtElement element : nbtList) {
+                if (!(element instanceof NbtCompound slotCompound)) continue;
+                if (!slotCompound.contains("Item")) continue;
+
+                NbtCompound itemCompound = slotCompound.getCompound("Item").orElse(null);
+                if (itemCompound == null) continue;
+
+                Optional<ItemStack> optionalStack = ItemStack.fromNbt(lookup, itemCompound);
+                if (optionalStack.isEmpty()) continue;
+
+                ItemStack stack = optionalStack.get();
+                if (!stack.isEmpty() && stack.isOf(filterItem)) {
+                    containsItem = true;
+                    break;
+                }
+            }
+
+            if (!containsItem) continue;
+
+            // Parse the position key
+            String[] parts = key.split("_");
+            Set<BlockPos> group = new HashSet<>();
+
+            for (String part : parts) {
+                String[] coords = part.split(",");
+                if (coords.length != 3) continue;
+
+                try {
+                    int x = Integer.parseInt(coords[0]);
+                    int y = Integer.parseInt(coords[1]);
+                    int z = Integer.parseInt(coords[2]);
+
+                    BlockPos chestPos = new BlockPos(x, y, z);
+                    if (chestPos.getSquaredDistance(playerPos) <= range * range) {
+                        group.add(chestPos);
+                    }
+                } catch (NumberFormatException ignored) {}
+            }
+
+            if (!group.isEmpty()) {
+                result.add(group);
+            }
+        }
+
+        return result;
+    }
+
 
 
     private static String getKeyFromPositions(List<BlockPos> positions) {
