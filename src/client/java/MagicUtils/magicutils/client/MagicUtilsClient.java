@@ -3,6 +3,7 @@ package MagicUtils.magicutils.client;
 import MagicUtils.magicutils.client.commands.ModCommands;
 import MagicUtils.magicutils.client.config.MagicUtilsConfig;
 import MagicUtils.magicutils.client.data.MagicUtilsDataHandler;
+import MagicUtils.magicutils.client.ui.custom.overlay.ChestOverlayRenderer;
 import MagicUtils.magicutils.client.ui.custom.screen.ItemScreen;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
@@ -21,7 +22,7 @@ public class MagicUtilsClient implements ClientModInitializer {
     public void onInitializeClient() {
         MagicUtilsConfig.load();
         MagicUtilsDataHandler.init();
-
+        ChestOverlayRenderer.register();
 
         ClientCommandRegistrationCallback.EVENT.register(ModCommands::registerAll);
         LOGGER.info("MagicUtils loaded successfully.");

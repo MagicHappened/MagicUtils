@@ -35,9 +35,6 @@ public class ChestHighlighter {
 
         MagicUtilsClient.LOGGER.info("Item clicked: {} | Mode: {}", clickedItem.getTranslationKey(), MagicUtilsConfig.searchPriorityMode);
 
-        // TODO: Populate highlightedChests with all matching chest BlockPos
-
-
         highlightedChests = ChestDataStorage.findGroupedChestsWithItem(new ItemStack(clickedItem));
 
         startHighlighting();
