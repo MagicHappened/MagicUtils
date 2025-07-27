@@ -1,8 +1,7 @@
 package MagicUtils.magicutils.client.mixins;
 
-import MagicUtils.magicutils.client.MagicUtilsClient;
 import MagicUtils.magicutils.client.data.ChestDataStorage;
-import MagicUtils.magicutils.client.data.ChestTracker;
+import MagicUtils.magicutils.client.data.ChestUtils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen;
@@ -39,7 +38,7 @@ public class HandledScreenMixin<T extends ScreenHandler> {
         ScreenHandler handler = ((HandledScreen<?>) (Object) this).getScreenHandler();
         int syncId = handler.syncId;
 
-        List<BlockPos> positions = ChestTracker.syncIdToChestPositions.remove(syncId);
+        List<BlockPos> positions = ChestUtils.syncIdToChestPositions.remove(syncId);
         if (positions == null || positions.isEmpty()) return;
 
         if (handler instanceof GenericContainerScreenHandler genericHandler) {

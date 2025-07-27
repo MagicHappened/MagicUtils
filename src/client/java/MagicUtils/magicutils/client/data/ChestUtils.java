@@ -1,22 +1,44 @@
 package MagicUtils.magicutils.client.data;
 
 import MagicUtils.magicutils.client.MagicUtilsClient;
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.ChestBlock;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.block.entity.ChestBlockEntity;
 import net.minecraft.block.enums.ChestType;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.state.property.Properties;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3i;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ChestUtils {
+
+    // Track the last chest block position the player interacted with
+    public static BlockPos lastInteractedChest = null;
+
+    // Map from sync IDs to the chest positions they correspond to (single or double chest)
+    public static final Map<Integer, List<BlockPos>> syncIdToChestPositions = new HashMap<>();
+
+    private static Direction getChestConnectionOffset(Direction facing, ChestType type) {
+        return switch (type) {
+            case LEFT  -> getSideDirection(facing).getOpposite(); // flipped as per fix
+            case RIGHT -> getSideDirection(facing);
+            default    -> Direction.NORTH; // SINGLE chest fallback
+        };
+    }
+
+    private static Direction getSideDirection(Direction facing) {
+        return switch (facing) {
+            case NORTH -> Direction.WEST;
+            case SOUTH -> Direction.EAST;
+            case WEST  -> Direction.SOUTH;
+            case EAST  -> Direction.NORTH;
+            default -> throw new IllegalStateException("Invalid chest facing: " + facing);
+        };
+    }
 
     public static List<BlockPos> getConnectedChestPositions(BlockPos basePos) {
         MinecraftClient client = MinecraftClient.getInstance();
@@ -24,69 +46,21 @@ public class ChestUtils {
         if (world == null || basePos == null) return List.of();
 
         BlockState state = world.getBlockState(basePos);
-        Block block = state.getBlock();
-
-        if (!(block instanceof ChestBlock)) return List.of();
+        if (!(state.getBlock() instanceof ChestBlock)) return List.of();
 
         if (!state.contains(Properties.CHEST_TYPE) || !state.contains(Properties.HORIZONTAL_FACING)) {
-            MagicUtilsClient.LOGGER.info("GetConnectedChestsPositions found 1 single chest. at pos: {}",basePos);
+            MagicUtilsClient.LOGGER.info("Single chest (missing props). Pos: {}", basePos);
             return List.of(basePos);
         }
-
-        BlockEntity be = world.getBlockEntity(basePos);
-        if (!(be instanceof ChestBlockEntity)) {
-            MagicUtilsClient.LOGGER.info("Why am i here, not a chestblockentity?");
-            return List.of(basePos);
-        }
-
 
         ChestType type = state.get(ChestBlock.CHEST_TYPE);
         Direction facing = state.get(ChestBlock.FACING);
 
-        if (type == ChestType.SINGLE) {
-            MagicUtilsClient.LOGGER.info("chest position: " + basePos);
-            return List.of(basePos);
-        }
+        if (type == ChestType.SINGLE) return List.of(basePos);
 
-        BlockPos otherPos = basePos;
+        Direction offset = getChestConnectionOffset(facing, type);
+        BlockPos otherPos = basePos.offset(offset);
 
-        switch (facing) {
-            case EAST -> {
-                if (type == ChestType.LEFT) {
-                    otherPos = basePos.north();
-                } else {
-                    otherPos = basePos.south();
-                }
-            }
-            case WEST -> {
-                if (type == ChestType.LEFT) {
-                    otherPos = basePos.south();
-                } else {
-                    otherPos = basePos.north();
-                }
-            }
-            case SOUTH -> {
-                if (type == ChestType.LEFT) {
-                    otherPos = basePos.east();
-                } else {
-                    otherPos = basePos.west();
-                }
-            }
-            case NORTH -> {
-                if (type == ChestType.LEFT) {
-                    otherPos = basePos.west();
-                } else {
-                    otherPos = basePos.east();
-                }
-            }
-            default -> {
-                MagicUtilsClient.LOGGER.error("Chest facing up or down? how did we get here");
-            }
-        }
-
-        BlockState otherState = world.getBlockState(otherPos);
-        MagicUtilsClient.LOGGER.info("First chest position: " + basePos + "\n Second Chest Position: "+ otherPos);
-        return List.of(basePos,otherPos);
-
+        return List.of(basePos, otherPos);
     }
 }

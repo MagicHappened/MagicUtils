@@ -2,7 +2,6 @@ package MagicUtils.magicutils.client.data;
 
 import MagicUtils.magicutils.client.MagicUtilsClient;
 import MagicUtils.magicutils.client.config.MagicUtilsConfig;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -14,8 +13,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-
-import static org.apache.commons.lang3.BooleanUtils.forEach;
 
 public class ChestDataStorage {
     private static final Map<String, NbtList> chestData = new HashMap<>();
@@ -30,6 +27,85 @@ public class ChestDataStorage {
         saveChestData(key, contents);
     }
 
+
+    public static void handleChestBreak(BlockPos brokenPos) {
+        Path dataFolder = getDataFolder();
+        if (!Files.exists(dataFolder)) return;
+
+        String brokenKeyPart = brokenPos.getX() + "," + brokenPos.getY() + "," + brokenPos.getZ();
+
+        try {
+            Files.list(dataFolder)
+                    .filter(p -> p.toString().endsWith(".dat"))
+                    .forEach(path -> {
+                        String filename = path.getFileName().toString().replace(".dat", "");
+
+                        if (!filename.contains(brokenKeyPart)) return; // Not related to broken chest
+
+                        List<String> positions = new ArrayList<>(Arrays.asList(filename.split("__")));
+
+                        if (positions.size() == 1) {
+                            // Single chest file - just delete
+                            try {
+                                Files.deleteIfExists(path);
+                                MagicUtilsClient.LOGGER.info("Deleted chest data file for broken single chest: {}", filename);
+                            } catch (IOException e) {
+                                MagicUtilsClient.LOGGER.error("Failed to delete chest data file for broken chest: {}", filename, e);
+                            }
+                            return;
+                        }
+
+                        // Double chest file - remove broken chest pos, clean slots, rename file
+                        positions.remove(brokenKeyPart);
+
+                        if (positions.size() != 1) {
+                            // Unexpected number of positions, skip to be safe
+                            MagicUtilsClient.LOGGER.warn("Unexpected chest file format when handling broken chest: {}", filename);
+                            return;
+                        }
+
+                        String newKey = positions.get(0);
+
+                        try {
+                            // Read NBT
+                            NbtCompound root;
+                            try (var in = Files.newInputStream(path)) {
+                                root = NbtIo.readCompressed(in, NbtSizeTracker.ofUnlimitedBytes());
+                            }
+
+                            NbtList items = root.getList("Items").orElse(new NbtList());
+
+                            // Remove slots >= 27, keep only first 27 slots for single chest
+                            NbtList filteredItems = new NbtList();
+                            for (NbtElement element : items) {
+                                if (!(element instanceof NbtCompound slotCompound)) continue;
+                                int slot = slotCompound.getInt("Slot").orElse(30); // 30 for if somehow there isnt an integer with Slot
+                                if (slot < 27) {                                             // ignore that part since it would cause unexpected behaviour
+                                    filteredItems.add(slotCompound);
+                                }
+                            }
+
+                            root.put("Items", filteredItems);
+
+                            // Save new single chest file
+                            Path newFile = dataFolder.resolve(newKey + ".dat");
+                            try (var out = Files.newOutputStream(newFile)) {
+                                NbtIo.writeCompressed(root, out);
+                            }
+
+                            // Delete old double chest file
+                            Files.deleteIfExists(path);
+
+                            MagicUtilsClient.LOGGER.info("Updated chest data file from double to single after chest break: {} -> {}", filename, newKey);
+
+                        } catch (IOException e) {
+                            MagicUtilsClient.LOGGER.error("Failed to update chest data file after chest break: {}", filename, e);
+                        }
+                    });
+        } catch (IOException e) {
+            MagicUtilsClient.LOGGER.error("Failed to list chest data folder during chest break handling", e);
+        }
+    }
     private static void saveChestData(String key, NbtList contents) {
         try {
             Path dataFolder = getDataFolder();
