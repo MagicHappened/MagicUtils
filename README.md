@@ -21,6 +21,6 @@ click on releases and put the jar in the mods folder of your minecraft installat
 
 ## Configuration
 
-With mod menu -> installed you can view the configuration yourself
+With mod menu -> installed you can view the configuration yourself  
 Without mod menu -> after you launch the game with the mod for the first time a json file in the config folder will have been generated, use that to change the config
 
