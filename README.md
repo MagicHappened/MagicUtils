@@ -1,10 +1,12 @@
 # MagicUtils
 
 **MagicUtils** is a client-side Fabric mod for Minecraft 1.21.5 that adds helpful utility features
+Made for Hypixel Skyblock but has some features that are useful outside of it as well
 
 ## Features
 
-not yet lol
+Searching for items in nearby chests from a ui that remembers all the chests that you've opened
+More to come
 
 ## Requirements
 
@@ -15,11 +17,10 @@ not yet lol
 
 ## Installation
 
-not yet either lol
+click on releases and put the jar in the mods folder of your minecraft installation
 
 ## Configuration
 
-some config options
+With mod menu -> installed you can view the configuration yourself
+Without mod menu -> after you launch the game with the mod for the first time a json file in the config folder will have been generated, use that to change the config
 
-## Uncategorized
-yes i got this readme from chatgpt lol
