@@ -1,5 +1,6 @@
 package MagicUtils.magicutils.client.ui.custom.overlay;
 
+import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.client.render.OverlayTexture;
@@ -16,22 +17,24 @@ import java.util.Set;
 
 public class ChestOverlayRenderer {
 
-    public static void register() {
-        WorldRenderEvents.AFTER_ENTITIES.register(context -> {
-            if (!ChestHighlighter.shouldRender()) return;
+    public static void onWorldRender(WorldRenderContext context) {
+        if (ChestHighlighter.isBlinking) {
+            ChestHighlighter.tick();
+        }
 
-            MatrixStack matrices = context.matrixStack();
-            Vec3d camPos = context.camera().getPos();
-            VertexConsumer consumer = context.consumers().getBuffer(RenderLayer.getLines());
+        if (!ChestHighlighter.shouldRender()) return;
 
-            for (Set<BlockPos> blocks : ChestHighlighter.getHighlightedChests()) {
-                Box box = createBoxFromPositions(blocks);
-                if (box == null) continue;
+        MatrixStack matrices = context.matrixStack();
+        Vec3d camPos = context.camera().getPos();
+        VertexConsumer consumer = context.consumers().getBuffer(RenderLayer.getLines());
 
-                box = box.expand(0.002);
-                renderBoxLines(consumer, matrices, box, camPos, 1f, 0f, 0f, 1f);
-            }
-        });
+        for (Set<BlockPos> blocks : ChestHighlighter.getHighlightedChests()) {
+            Box box = createBoxFromPositions(blocks);
+            if (box == null) continue;
+
+            box = box.expand(0.002);
+            renderBoxLines(consumer, matrices, box, camPos, 1f, 0f, 0f, 1f);
+        }
     }
 
     private static Box createBoxFromPositions(Set<BlockPos> blocks) {

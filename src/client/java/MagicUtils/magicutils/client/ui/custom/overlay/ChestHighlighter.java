@@ -19,7 +19,7 @@ public class ChestHighlighter {
 
     // Timing controls
     private static long highlightStartTime = 0;
-    private static boolean isBlinking = false;
+    public static boolean isBlinking = false;
     private static boolean visible = false;
 
     // Duration constants

@@ -3,6 +3,7 @@ package MagicUtils.magicutils.client;
 import MagicUtils.magicutils.client.commands.ModCommands;
 import MagicUtils.magicutils.client.config.MagicUtilsConfig;
 import MagicUtils.magicutils.client.data.MagicUtilsDataHandler;
+import MagicUtils.magicutils.client.event.ModEvents;
 import MagicUtils.magicutils.client.ui.custom.overlay.ChestOverlayRenderer;
 import MagicUtils.magicutils.client.ui.custom.screen.ItemScreen;
 import net.fabricmc.api.ClientModInitializer;
@@ -20,9 +21,9 @@ public class MagicUtilsClient implements ClientModInitializer {
     public static boolean ShouldOpenScreen = false;
     @Override
     public void onInitializeClient() {
+        ModEvents.register();
         MagicUtilsConfig.load();
         MagicUtilsDataHandler.init();
-        ChestOverlayRenderer.register();
 
         ClientCommandRegistrationCallback.EVENT.register(ModCommands::registerAll);
         LOGGER.info("MagicUtils loaded successfully.");
