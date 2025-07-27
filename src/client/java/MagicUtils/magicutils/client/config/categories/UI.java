@@ -27,10 +27,10 @@ public class UI {
         general.addEntry(entryBuilder.startEnumSelector(
                         Text.literal("Sorting Mode"),
                         SortingMode.class,
-                        config.sortingMode
+                        MagicUtilsConfig.sortingMode
                 )
                 .setDefaultValue(SortingMode.Quantity)
-                .setSaveConsumer(newValue -> config.sortingMode = newValue)
+                .setSaveConsumer(newValue -> MagicUtilsConfig.sortingMode = newValue)
                 .setTooltip(
                         Text.literal("Choose how the search orders items:\n" +
                                 "- Quantity: Displays items based on the amount stored.\n" +
@@ -41,16 +41,16 @@ public class UI {
         general.addEntry(entryBuilder.startEnumSelector(
                         Text.literal("Sorting Order"),
                         SortingOrder.class,
-                        config.sortingOrder
+                        MagicUtilsConfig.sortingOrder
                 )
                 .setDefaultValue(SortingOrder.Descending)
-                .setSaveConsumer(newValue -> config.sortingOrder = newValue)
+                .setSaveConsumer(newValue -> MagicUtilsConfig.sortingOrder = newValue)
                 .build());
 
 
-        general.addEntry(entryBuilder.startBooleanToggle(Text.literal("Sidebar Tooltip"), config.SidebarTooltip)
+        general.addEntry(entryBuilder.startBooleanToggle(Text.literal("Sidebar Tooltip"), MagicUtilsConfig.SidebarTooltip)
                 .setDefaultValue(false)
-                .setSaveConsumer(newValue -> config.SidebarTooltip = newValue)
+                .setSaveConsumer(newValue -> MagicUtilsConfig.SidebarTooltip = newValue)
                 .build());
 
 
