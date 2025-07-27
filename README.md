@@ -20,5 +20,5 @@ click on releases and put the jar in the mods folder of your minecraft installat
 
 ## Configuration
 
-With mod menu -> installed you can view the configuration yourself  
+With mod menu  installed you can view the configuration yourself in game and change it  
 An implementation for no mod menu will be added with time
