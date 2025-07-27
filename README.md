@@ -9,8 +9,7 @@ Searching for items in nearby chests from a ui that remembers all the chests tha
 More to come
 
 ## Requirements
-
-- [Fabric Loader](https://fabricmc.net/)
+  
 - [Fabric API](https://modrinth.com/mod/fabric-api)
 - [ModMenu](https://modrinth.com/mod/modmenu)
 - [Cloth Config](https://modrinth.com/mod/cloth-config)
@@ -22,5 +21,4 @@ click on releases and put the jar in the mods folder of your minecraft installat
 ## Configuration
 
 With mod menu -> installed you can view the configuration yourself  
-Without mod menu -> after you launch the game with the mod for the first time a json file in the config folder will have been generated, use that to change the config
-
+An implementation for no mod menu will be added with time
