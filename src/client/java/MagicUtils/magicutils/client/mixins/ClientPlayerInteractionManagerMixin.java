@@ -33,7 +33,6 @@ public class ClientPlayerInteractionManagerMixin {
 
         BlockState state = client.world.getBlockState(pos);
         if (state.getBlock() instanceof ChestBlock) {
-            MagicUtilsClient.LOGGER.info("Chest broken at: {}", pos);
             ChestDataStorage.handleChestBreak(pos); // Your method to update/remove chest data files
         }
     }

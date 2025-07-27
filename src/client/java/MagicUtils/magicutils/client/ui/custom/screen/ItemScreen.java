@@ -3,6 +3,7 @@ package MagicUtils.magicutils.client.ui.custom.screen;
 import MagicUtils.magicutils.client.MagicUtilsClient;
 import MagicUtils.magicutils.client.config.MagicUtilsConfig;
 import MagicUtils.magicutils.client.ui.custom.overlay.ChestHighlighter;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.registry.RegistryOps;
 import MagicUtils.magicutils.client.config.categories.UI;
 import MagicUtils.magicutils.client.data.ChestDataStorage;
@@ -15,7 +16,10 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.tooltip.TooltipType;
 import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.text.HoverEvent;
+import net.minecraft.text.Style;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 
@@ -206,7 +210,21 @@ public class ItemScreen extends Screen {
                 if (isPointWithin((int) mouseX, (int) mouseY, slotX, slotY)) {
                     ItemStack clickedStack = displayedItems.get(index);
                     if (!clickedStack.isEmpty()) {
-                        MagicUtilsClient.LOGGER.info("Item clicked: " + clickedStack.getItem().toString());
+                        if (client == null || client.player == null){
+                            MagicUtilsClient.LOGGER.warn("Clicked on screen when client or player was null, how did this even happen?");
+                            return false;
+                        }
+
+                        HoverEvent hoverEvent = new HoverEvent.ShowItem(clickedStack.copy());
+
+                        Text hoverText = clickedStack.getItem().getName().copy()
+                                .setStyle(Style.EMPTY.withColor(Formatting.GOLD).withHoverEvent(hoverEvent));
+
+                        client.player.sendMessage(
+                                Text.literal("Searching for ").formatted(Formatting.WHITE)
+                                        .append(hoverText),
+                                false  // `false` means the message is client-side only and not sent as a system message
+                        );
                         ChestHighlighter.onItemClicked(clickedStack);
                     }
                     return true;
