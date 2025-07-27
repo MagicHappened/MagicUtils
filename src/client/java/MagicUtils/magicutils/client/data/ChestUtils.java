@@ -47,7 +47,7 @@ public class ChestUtils {
             MagicUtilsClient.LOGGER.info("chest position: " + basePos);
             return List.of(basePos);
         }
-        //test comment
+
         BlockPos otherPos = basePos;
 
         switch (facing) {

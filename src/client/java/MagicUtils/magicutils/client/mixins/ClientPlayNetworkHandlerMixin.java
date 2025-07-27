@@ -1,6 +1,5 @@
 package MagicUtils.magicutils.client.mixins;
 
-import MagicUtils.magicutils.client.data.ChestTracker;
 import MagicUtils.magicutils.client.data.ChestUtils;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.network.packet.s2c.play.OpenScreenS2CPacket;
@@ -18,8 +17,8 @@ public class ClientPlayNetworkHandlerMixin {
         int syncId = ((OpenScreenS2CPacketAccessor) packet).magicutils$getSyncId();
 
         if (type == ScreenHandlerType.GENERIC_9X3 || type == ScreenHandlerType.GENERIC_9X6) {
-            var posList = ChestUtils.getConnectedChestPositions(ChestTracker.lastInteractedChest);
-            ChestTracker.syncIdToChestPositions.put(syncId, posList);
+            var posList = ChestUtils.getConnectedChestPositions(ChestUtils.lastInteractedChest);
+            ChestUtils.syncIdToChestPositions.put(syncId, posList);
         }
     }
 }

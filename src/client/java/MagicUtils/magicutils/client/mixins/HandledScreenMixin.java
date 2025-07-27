@@ -1,8 +1,7 @@
 package MagicUtils.magicutils.client.mixins;
 
-import MagicUtils.magicutils.client.MagicUtilsClient;
 import MagicUtils.magicutils.client.data.ChestDataStorage;
-import MagicUtils.magicutils.client.data.ChestTracker;
+import MagicUtils.magicutils.client.data.ChestUtils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen;
@@ -19,8 +18,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import net.minecraft.nbt.NbtOps;
-import net.minecraft.registry.RegistryOps;
+
 import java.util.List;
 import java.util.Objects;
 @Mixin(HandledScreen.class)
@@ -40,7 +38,7 @@ public class HandledScreenMixin<T extends ScreenHandler> {
         ScreenHandler handler = ((HandledScreen<?>) (Object) this).getScreenHandler();
         int syncId = handler.syncId;
 
-        List<BlockPos> positions = ChestTracker.syncIdToChestPositions.remove(syncId);
+        List<BlockPos> positions = ChestUtils.syncIdToChestPositions.remove(syncId);
         if (positions == null || positions.isEmpty()) return;
 
         if (handler instanceof GenericContainerScreenHandler genericHandler) {

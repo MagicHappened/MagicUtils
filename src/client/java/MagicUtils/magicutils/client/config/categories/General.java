@@ -17,6 +17,17 @@ public class General {
         ConfigCategory general = builder.getOrCreateCategory(Text.literal("General"));
         ConfigEntryBuilder entryBuilder = builder.entryBuilder();
 
+        general.addEntry(entryBuilder.startIntField(
+                        Text.literal("Search Range"),
+                        config.searchRange
+                )
+                .setDefaultValue(50)
+                .setMin(5)
+                .setMax(500)
+                .setSaveConsumer(newValue -> config.searchRange = newValue)
+                .setTooltip(Text.literal("The maximum distance (in blocks) to include chests in item lookup."))
+                .build());
+
 
         general.addEntry(entryBuilder.startEnumSelector(
                         Text.literal("Search Priority Mode"),
