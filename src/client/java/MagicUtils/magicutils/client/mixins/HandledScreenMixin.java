@@ -9,6 +9,7 @@ import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.screen.GenericContainerScreenHandler;
@@ -41,22 +42,22 @@ public class HandledScreenMixin<T extends ScreenHandler> {
         List<BlockPos> positions = ChestUtils.syncIdToChestPositions.remove(syncId);
         if (positions == null || positions.isEmpty()) return;
 
+        RegistryWrapper.WrapperLookup lookup = MinecraftClient.getInstance()
+                .getNetworkHandler()
+                .getRegistryManager();
+
         if (handler instanceof GenericContainerScreenHandler genericHandler) {
             NbtList itemsList = new NbtList();
-
-            RegistryWrapper.WrapperLookup lookup = MinecraftClient.getInstance()
-                    .getNetworkHandler()
-                    .getRegistryManager();
 
             for (int i = 0; i < genericHandler.getInventory().size(); i++) {
                 ItemStack stack = genericHandler.getInventory().getStack(i);
                 if (!stack.isEmpty()) {
                     NbtCompound itemData = new NbtCompound();
-                    itemData.putInt("Slot", i);
                     itemData.put("Item", stack.toNbt(lookup));
                     itemsList.add(itemData);
                 }
             }
+
             ChestDataStorage.addChestContents(positions, itemsList);
         }
     }

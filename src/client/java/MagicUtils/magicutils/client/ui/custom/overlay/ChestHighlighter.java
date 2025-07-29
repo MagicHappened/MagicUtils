@@ -33,9 +33,9 @@ public class ChestHighlighter {
 
         Item clickedItem = stack.getItem();
 
-        MagicUtilsClient.LOGGER.info("Item clicked: {} | Mode: {}", clickedItem.getTranslationKey(), MagicUtilsConfig.searchPriorityMode);
+        MagicUtilsClient.LOGGER.info("Item clicked: {}", clickedItem.getTranslationKey());
 
-        highlightedChests = ChestDataStorage.findGroupedChestsWithItem(new ItemStack(clickedItem));
+        highlightedChests = ChestDataStorage.getItemPositions(new ItemStack(clickedItem));
 
         startHighlighting();
         MinecraftClient.getInstance().setScreen(null); // Close the GUI
