@@ -42,7 +42,6 @@ public class OpenItemScreen {
         MagicUtilsClient.ShouldOpenScreen = true;
 
         source.sendFeedback(Text.literal("Opening ItemScreen for: " + (ItemName.isEmpty() ? "all items (no specific item provided)" : ItemName)));
-        MagicUtilsClient.LOGGER.info("Current screen after setScreen: {}", client.currentScreen != null ? client.currentScreen.getClass().getName() : "null");
 
         return 1;
     }

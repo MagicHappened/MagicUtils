@@ -53,7 +53,6 @@ public class ChestDataStorage {
                             // Single chest file - just delete
                             try {
                                 Files.deleteIfExists(path);
-                                MagicUtilsClient.LOGGER.info("Deleted chest data file for broken single chest: {}", filename);
                             } catch (IOException e) {
                                 MagicUtilsClient.LOGGER.error("Failed to delete chest data file for broken chest: {}", filename, e);
                             }
@@ -101,7 +100,6 @@ public class ChestDataStorage {
                             // Delete old double chest file
                             Files.deleteIfExists(path);
 
-                            MagicUtilsClient.LOGGER.info("Updated chest data file from double to single after chest break: {} -> {}", filename, newKey);
 
                         } catch (IOException e) {
                             MagicUtilsClient.LOGGER.error("Failed to update chest data file after chest break: {}", filename, e);
@@ -300,7 +298,7 @@ public class ChestDataStorage {
                         ItemStack stack = optionalStack.get();
                         if (stack.isEmpty()) continue;
 
-                        StackKey key = new StackKey(stack, itemCompound);
+                        StackKey key = new StackKey(stack);
                         if (key.equals(filterKey)) {
                             result.add(Set.copyOf(positions));
                             break; // no need to continue scanning this file

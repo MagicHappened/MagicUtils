@@ -49,7 +49,6 @@ public class ChestUtils {
         if (!(state.getBlock() instanceof ChestBlock)) return List.of();
 
         if (!state.contains(Properties.CHEST_TYPE) || !state.contains(Properties.HORIZONTAL_FACING)) {
-            MagicUtilsClient.LOGGER.info("Single chest (missing props). Pos: {}", basePos);
             return List.of(basePos);
         }
 

@@ -31,11 +31,10 @@ public class ChestHighlighter {
     public static void onItemClicked(ItemStack stack) {
         if (stack == null || stack.isEmpty()) return;
 
-        Item clickedItem = stack.getItem();
 
-        MagicUtilsClient.LOGGER.info("Item clicked: {}", clickedItem.getTranslationKey());
+        MagicUtilsClient.LOGGER.info("Item clicked: {}", stack.getItem().getName());
 
-        highlightedChests = ChestDataStorage.getItemPositions(new ItemStack(clickedItem));
+        highlightedChests = ChestDataStorage.getItemPositions(stack);
 
         startHighlighting();
         MinecraftClient.getInstance().setScreen(null); // Close the GUI

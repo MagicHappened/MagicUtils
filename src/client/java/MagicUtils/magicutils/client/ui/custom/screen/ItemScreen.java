@@ -5,6 +5,7 @@ import MagicUtils.magicutils.client.config.MagicUtilsConfig;
 import MagicUtils.magicutils.client.data.StackKey;
 import MagicUtils.magicutils.client.ui.custom.overlay.ChestHighlighter;
 import net.minecraft.component.ComponentMap;
+import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtOps;
 import MagicUtils.magicutils.client.config.categories.UI;
 import MagicUtils.magicutils.client.data.ChestDataStorage;
@@ -22,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 public class ItemScreen extends Screen {
 
@@ -56,6 +58,7 @@ public class ItemScreen extends Screen {
         searchBox.setChangedListener(text -> {
             filter = text;
             if (!filter.isEmpty()) updateDisplayedItems(filter);
+            else updateDisplayedItems();
         });
 
         addSelectableChild(searchBox);
@@ -67,10 +70,10 @@ public class ItemScreen extends Screen {
     private void updateDisplayedItemsFromMap(Map<StackKey, Integer> aggregated) {
         displayedItems.clear();
         displayedCounts.clear();
-
         if (aggregated == null || aggregated.isEmpty()) return;
 
-        var entryStream = aggregated.entrySet().stream()
+        // could replace explicit declaration with var but meh
+        Stream<Map.Entry<ItemStack,Integer>> entryStream = aggregated.entrySet().stream()
                 .map(entry -> Map.entry(entry.getKey().stack(), entry.getValue()));
 
         Comparator<Map.Entry<ItemStack, Integer>> comparator = switch (MagicUtilsConfig.sortingMode) {
@@ -79,7 +82,6 @@ public class ItemScreen extends Screen {
                     .comparing((Map.Entry<ItemStack, Integer> e) -> e.getKey().getName().getString())
                     .thenComparing(e -> {
                         String compStr = serializeComponentsToString(e.getKey().getComponents());
-                        MagicUtilsClient.LOGGER.info("Components string: {}", compStr);
                         return compStr;
                     });
         };
