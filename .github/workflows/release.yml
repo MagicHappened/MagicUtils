@@ -5,7 +5,7 @@ on:
     branches:
       - master
     tags:
-      - '*'
+      - 'MagicUtilsReleases'
 
 jobs:
   build:
@@ -21,8 +21,9 @@ jobs:
           java-version: 21
           distribution: temurin
 
-      - name: Make gradlew executable        # <-- Insert this step here
-        run: chmod +x ./gradlew
+      - name: Print GitHub ref
+        run:
+          echo "This run triggered by ref: $GITHUB_REF"
 
       - name: Build with Gradle
         run: ./gradlew build
