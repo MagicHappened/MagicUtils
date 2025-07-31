@@ -1,11 +1,10 @@
 package MagicUtils.magicutils.client.ui.custom.screen;
 
 import MagicUtils.magicutils.client.MagicUtilsClient;
-import MagicUtils.magicutils.client.config.MagicUtilsConfig;
+import static MagicUtils.magicutils.client.MagicUtilsClient.CONFIG;
 import MagicUtils.magicutils.client.data.StackKey;
 import MagicUtils.magicutils.client.ui.custom.overlay.ChestHighlighter;
 import net.minecraft.component.ComponentMap;
-import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtOps;
 import MagicUtils.magicutils.client.config.categories.UI;
 import MagicUtils.magicutils.client.data.ChestDataStorage;
@@ -76,17 +75,14 @@ public class ItemScreen extends Screen {
         Stream<Map.Entry<ItemStack,Integer>> entryStream = aggregated.entrySet().stream()
                 .map(entry -> Map.entry(entry.getKey().stack(), entry.getValue()));
 
-        Comparator<Map.Entry<ItemStack, Integer>> comparator = switch (MagicUtilsConfig.sortingMode) {
+        Comparator<Map.Entry<ItemStack, Integer>> comparator = switch (CONFIG.sortingMode) {
             case Quantity -> Map.Entry.comparingByValue();
             case ItemName -> Comparator
                     .comparing((Map.Entry<ItemStack, Integer> e) -> e.getKey().getName().getString())
-                    .thenComparing(e -> {
-                        String compStr = serializeComponentsToString(e.getKey().getComponents());
-                        return compStr;
-                    });
+                    .thenComparing(e -> serializeComponentsToString(e.getKey().getComponents()));
         };
 
-        if (MagicUtilsConfig.sortingOrder == UI.SortingOrder.Descending) {
+        if (CONFIG.sortingOrder == UI.SortingOrder.Descending) {
             comparator = comparator.reversed();
         }
 
@@ -164,7 +160,7 @@ public class ItemScreen extends Screen {
 
         // Tooltip rendering
         if (!hoveredStack.isEmpty()) {
-            if (MagicUtilsConfig.SidebarTooltip) {
+            if (CONFIG.sidebarTooltip) {
                 List<Text> tooltipLines = hoveredStack.getTooltip(Item.TooltipContext.DEFAULT, null, TooltipType.BASIC);
                 int maxWidth = tooltipLines.stream().mapToInt(textRenderer::getWidth).max().orElse(0);
                 int tooltipX = x - maxWidth - 16;

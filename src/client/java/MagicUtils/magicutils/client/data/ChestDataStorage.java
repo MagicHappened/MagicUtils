@@ -1,7 +1,6 @@
 package MagicUtils.magicutils.client.data;
 
 import MagicUtils.magicutils.client.MagicUtilsClient;
-import MagicUtils.magicutils.client.config.MagicUtilsConfig;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.tooltip.TooltipType;
@@ -17,9 +16,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static MagicUtils.magicutils.client.MagicUtilsClient.CONFIG;
 
 public class ChestDataStorage {
-    private static final Map<String, NbtList> chestData = new HashMap<>();
 
 
     private static Path getDataFolder() {
@@ -28,7 +29,6 @@ public class ChestDataStorage {
 
     public static void addChestContents(List<BlockPos> positions, NbtList contents) {
         String key = getKeyFromPositions(positions);
-        chestData.put(key, contents);
         saveChestData(key, contents);
     }
 
@@ -39,8 +39,8 @@ public class ChestDataStorage {
 
         String brokenKeyPart = brokenPos.getX() + "," + brokenPos.getY() + "," + brokenPos.getZ();
 
-        try {
-            Files.list(dataFolder)
+        try (Stream<Path> paths = Files.list(dataFolder)) {
+            paths
                     .filter(p -> p.toString().endsWith(".dat"))
                     .forEach(path -> {
                         String filename = path.getFileName().toString().replace(".dat", "");
@@ -68,7 +68,7 @@ public class ChestDataStorage {
                             return;
                         }
 
-                        String newKey = positions.get(0);
+                        String newKey = positions.getFirst();
 
                         try {
                             // Read NBT
@@ -83,8 +83,8 @@ public class ChestDataStorage {
                             NbtList filteredItems = new NbtList();
                             for (NbtElement element : items) {
                                 if (!(element instanceof NbtCompound slotCompound)) continue;
-                                int slot = slotCompound.getInt("Slot").orElse(30); // 30 for if somehow there isnt an integer with Slot
-                                if (slot < 27) {                                             // ignore that part since it would cause unexpected behaviour
+                                int slot = slotCompound.getInt("Slot").orElse(30); // fallback if Slot is missing
+                                if (slot < 27) {
                                     filteredItems.add(slotCompound);
                                 }
                             }
@@ -100,7 +100,6 @@ public class ChestDataStorage {
                             // Delete old double chest file
                             Files.deleteIfExists(path);
 
-
                         } catch (IOException e) {
                             MagicUtilsClient.LOGGER.error("Failed to update chest data file after chest break: {}", filename, e);
                         }
@@ -109,6 +108,7 @@ public class ChestDataStorage {
             MagicUtilsClient.LOGGER.error("Failed to list chest data folder during chest break handling", e);
         }
     }
+
     private static void saveChestData(String key, NbtList contents) {
         try {
             Path dataFolder = getDataFolder();
@@ -191,15 +191,17 @@ public class ChestDataStorage {
     // 1. Core logic: loads all items in range (no filtering)
     public static Map<StackKey, Integer> loadItemsWithinRange() {
         Map<StackKey, Integer> aggregated = new HashMap<>();
+        assert MinecraftClient.getInstance().player != null;
         BlockPos origin = MinecraftClient.getInstance().player.getBlockPos();
 
         List<Pair<Set<BlockPos>, List<ItemStack>>> chestData = loadChestData();
 
+        assert chestData != null;
         for (Pair<Set<BlockPos>, List<ItemStack>> pair : chestData) {
             Set<BlockPos> positions = pair.getLeft();
 
             // Only process groups within range
-            boolean withinRange = positions.stream().anyMatch(pos -> pos.isWithinDistance(origin, MagicUtilsConfig.searchRange));
+            boolean withinRange = positions.stream().anyMatch(pos -> pos.isWithinDistance(origin, CONFIG.searchRange));
             if (!withinRange) continue;
 
             List<ItemStack> items = pair.getRight();
@@ -224,7 +226,7 @@ public class ChestDataStorage {
             ItemStack stack = entry.getKey().stack();
             int count = entry.getValue();
 
-            boolean matches = false;
+            boolean matches;
 
             if (loweredFilter.charAt(0) == '#') {
                 String tooltipQuery = loweredFilter.substring(1);

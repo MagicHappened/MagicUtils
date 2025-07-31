@@ -10,7 +10,6 @@ public class MagicUtilsModMenuCompat implements ModMenuApi {
     @Override
     public ConfigScreenFactory<?> getModConfigScreenFactory() {
         return parent -> {
-            MagicUtilsConfig config = MagicUtilsConfig.get();
             ConfigBuilder builder = ConfigBuilder.create()
                     .setParentScreen(parent)
                     .setTitle(Text.literal("MagicUtils Config"))
@@ -19,7 +18,7 @@ public class MagicUtilsModMenuCompat implements ModMenuApi {
                         MagicUtilsClient.CONFIG = MagicUtilsConfig.get(); // Refresh reference
                     });
 
-            ConfigCategoryHandler.registerAll(builder, config);
+            ConfigCategoryHandler.registerAll(builder);
             return builder.build();
         };
     }

@@ -1,11 +1,7 @@
 package MagicUtils.magicutils.client.ui.custom.overlay;
 
-import MagicUtils.magicutils.client.MagicUtilsClient;
-import MagicUtils.magicutils.client.config.MagicUtilsConfig;
-import MagicUtils.magicutils.client.config.categories.General;
 import MagicUtils.magicutils.client.data.ChestDataStorage;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 
@@ -30,9 +26,6 @@ public class ChestHighlighter {
 
     public static void onItemClicked(ItemStack stack) {
         if (stack == null || stack.isEmpty()) return;
-
-
-        MagicUtilsClient.LOGGER.info("Item clicked: {}", stack.getItem().getName());
 
         highlightedChests = ChestDataStorage.getItemPositions(stack);
 

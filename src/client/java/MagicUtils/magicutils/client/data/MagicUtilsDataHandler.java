@@ -23,6 +23,7 @@ public class MagicUtilsDataHandler {
     public static Path getCurrentContextSaveDir() {
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.isInSingleplayer()) {
+            assert client.getServer() != null;
             String levelName = client.getServer().getSaveProperties().getLevelName();
             return DATA_FOLDER.resolve("singleplayer").resolve(levelName);
         } else if (client.getCurrentServerEntry() != null) {

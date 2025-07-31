@@ -1,6 +1,5 @@
 package MagicUtils.magicutils.client.mixins;
 
-import MagicUtils.magicutils.client.MagicUtilsClient;
 import MagicUtils.magicutils.client.data.ChestDataStorage;
 import MagicUtils.magicutils.client.data.ChestUtils;
 import net.minecraft.block.BlockState;
@@ -22,8 +21,7 @@ public class ClientPlayerInteractionManagerMixin {
 
     @Inject(method = "interactBlock", at = @At("HEAD"))
     private void onInteractBlock(ClientPlayerEntity player, Hand hand, BlockHitResult hitResult, CallbackInfoReturnable<ActionResult> cir) {
-        BlockPos pos = hitResult.getBlockPos();
-        ChestUtils.lastInteractedChest = pos;
+        ChestUtils.lastInteractedChest = hitResult.getBlockPos();
     }
 
     @Inject(method = "breakBlock", at = @At("HEAD"))
@@ -33,8 +31,7 @@ public class ClientPlayerInteractionManagerMixin {
 
         BlockState state = client.world.getBlockState(pos);
         if (state.getBlock() instanceof ChestBlock) {
-            MagicUtilsClient.LOGGER.info("Chest broken at: {}", pos);
-            ChestDataStorage.handleChestBreak(pos); // Your method to update/remove chest data files
+            ChestDataStorage.handleChestBreak(pos);
         }
     }
 }

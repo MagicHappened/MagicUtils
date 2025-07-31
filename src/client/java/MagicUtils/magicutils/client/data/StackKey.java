@@ -4,17 +4,13 @@ import MagicUtils.magicutils.client.MagicUtilsClient;
 import com.mojang.serialization.DynamicOps;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.component.ComponentMap;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.NbtComponent;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.registry.RegistryOps;
 import net.minecraft.registry.RegistryWrapper;
-
 import java.util.Objects;
-import java.util.Optional;
 
 public record StackKey(ItemStack stack, NbtCompound nbt) {
 
