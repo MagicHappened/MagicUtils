@@ -22,6 +22,7 @@ crash-reports/
 # Fabric / Minecraft specific
 *.lock
 *.jar
+!gradle/wrapper/gradle-wrapper.jar
 
 # Compiled Java class files
 *.class
