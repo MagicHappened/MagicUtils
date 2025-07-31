@@ -2,9 +2,10 @@ package MagicUtils.magicutils.client.ui.custom.screen;
 
 import MagicUtils.magicutils.client.MagicUtilsClient;
 import static MagicUtils.magicutils.client.MagicUtilsClient.CONFIG;
-import MagicUtils.magicutils.client.data.StackKey;
+import MagicUtils.magicutils.client.data.stackkey.core.StackKey;
 import MagicUtils.magicutils.client.ui.custom.overlay.ChestHighlighter;
 import net.minecraft.component.ComponentMap;
+import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtOps;
 import MagicUtils.magicutils.client.config.categories.UI;
 import MagicUtils.magicutils.client.data.ChestDataStorage;
@@ -66,20 +67,19 @@ public class ItemScreen extends Screen {
         updateDisplayedItems();
     }
 
-    private void updateDisplayedItemsFromMap(Map<StackKey, Integer> aggregated) {
+    private void updateDisplayedItemsFromMap(Map<StackKey, Integer> displayData) {
         displayedItems.clear();
         displayedCounts.clear();
-        if (aggregated == null || aggregated.isEmpty()) return;
+        if (displayData == null || displayData.isEmpty()) return;
 
         // could replace explicit declaration with var but meh
-        Stream<Map.Entry<ItemStack,Integer>> entryStream = aggregated.entrySet().stream()
-                .map(entry -> Map.entry(entry.getKey().stack(), entry.getValue()));
+        Stream<Map.Entry<StackKey,Integer>> entryStream = displayData.entrySet().stream()
+                .map(entry -> Map.entry(entry.getKey(), entry.getValue()));
 
-        Comparator<Map.Entry<ItemStack, Integer>> comparator = switch (CONFIG.sortingMode) {
+        Comparator<Map.Entry<StackKey, Integer>> comparator = switch (CONFIG.sortingMode) {
             case Quantity -> Map.Entry.comparingByValue();
             case ItemName -> Comparator
-                    .comparing((Map.Entry<ItemStack, Integer> e) -> e.getKey().getName().getString())
-                    .thenComparing(e -> serializeComponentsToString(e.getKey().getComponents()));
+                    .comparing((Map.Entry<StackKey, Integer> e) -> e.getKey().getStack().getName().getString());
         };
 
         if (CONFIG.sortingOrder == UI.SortingOrder.Descending) {
@@ -88,7 +88,7 @@ public class ItemScreen extends Screen {
 
         entryStream.sorted(comparator)
                 .forEach(entry -> {
-                    ItemStack stack = entry.getKey().copy();
+                    ItemStack stack = entry.getKey().getStack().copy();
                     stack.setCount(1);
                     displayedItems.add(stack);
                     displayedCounts.add(entry.getValue());
@@ -115,7 +115,6 @@ public class ItemScreen extends Screen {
 
         ItemStack hoveredStack = ItemStack.EMPTY;
 
-        // First pass: draw items only
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < columns; col++) {
                 int index = row * columns + col;
@@ -129,7 +128,6 @@ public class ItemScreen extends Screen {
             }
         }
 
-        // Second pass: draw counts on top of items with higher z-level
         context.getMatrices().push();
         context.getMatrices().translate(0, 0, 300); // Higher z-level than items
 

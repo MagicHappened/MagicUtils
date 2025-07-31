@@ -1,5 +1,6 @@
 package MagicUtils.magicutils.client.ui.custom.overlay;
 
+import MagicUtils.magicutils.client.data.Chest;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.client.render.OverlayTexture;
@@ -28,8 +29,8 @@ public class ChestOverlayRenderer {
         Vec3d camPos = context.camera().getPos();
         VertexConsumer consumer = Objects.requireNonNull(context.consumers()).getBuffer(RenderLayer.getLines());
 
-        for (Set<BlockPos> blocks : ChestHighlighter.getHighlightedChests()) {
-            Box box = createBoxFromPositions(blocks);
+        for (Chest chest : ChestHighlighter.getHighlightedChests()) {
+            Box box = createBoxFromPositions(chest.getPositions());
             if (box == null) continue;
 
             box = box.expand(0.002);
