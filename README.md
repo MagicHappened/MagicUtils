@@ -6,7 +6,7 @@ Made for Hypixel Skyblock but has some features that are useful outside of it as
 ## Features
 
 Searching for items in nearby chests from a ui that remembers all the chests that you've opened  
-for a more detailed explanation see below
+for a more detailed explanation see below  
 More to come
 
 ## Requirements
