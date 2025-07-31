@@ -5,7 +5,7 @@ on:
     branches:
       - master
     tags:
-      - 'v*' # optional: if you want to release only on version tags
+      - 'v*'
 
 jobs:
   build:
@@ -20,6 +20,9 @@ jobs:
         with:
           java-version: 21
           distribution: temurin
+
+      - name: Make gradlew executable        # <-- Insert this step here
+        run: chmod +x ./gradlew
 
       - name: Build with Gradle
         run: ./gradlew build
