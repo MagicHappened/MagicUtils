@@ -2,7 +2,7 @@ package MagicUtils.magicutils.client.ui.custom.screen;
 
 import MagicUtils.magicutils.client.MagicUtilsClient;
 import static MagicUtils.magicutils.client.MagicUtilsClient.CONFIG;
-import MagicUtils.magicutils.client.data.StackKey;
+import MagicUtils.magicutils.client.data.stackkey.core.StackKey;
 import MagicUtils.magicutils.client.ui.custom.overlay.ChestHighlighter;
 import net.minecraft.component.ComponentMap;
 import net.minecraft.nbt.NbtOps;

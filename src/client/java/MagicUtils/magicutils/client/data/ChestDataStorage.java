@@ -1,6 +1,8 @@
 package MagicUtils.magicutils.client.data;
 
 import MagicUtils.magicutils.client.MagicUtilsClient;
+import MagicUtils.magicutils.client.data.stackkey.core.StackKey;
+import MagicUtils.magicutils.client.data.stackkey.core.StackKeyProvider;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.tooltip.TooltipType;
@@ -19,6 +21,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static MagicUtils.magicutils.client.MagicUtilsClient.CONFIG;
+import static MagicUtils.magicutils.client.MagicUtilsClient.STACK_KEY_PROVIDER;
 
 public class ChestDataStorage {
 
@@ -208,7 +211,8 @@ public class ChestDataStorage {
             for (ItemStack stack : items) {
                 if (stack.isEmpty()) continue;
 
-                StackKey key = new StackKey(stack);
+
+                StackKey key = STACK_KEY_PROVIDER.getStackKey(stack);
                 aggregated.merge(key, stack.getCount(), Integer::sum);
             }
         }
@@ -223,7 +227,7 @@ public class ChestDataStorage {
         Map<StackKey, Integer> filtered = new HashMap<>();
 
         for (var entry : raw.entrySet()) {
-            ItemStack stack = entry.getKey().stack();
+            ItemStack stack = entry.getKey();
             int count = entry.getValue();
 
             boolean matches;

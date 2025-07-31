@@ -3,8 +3,10 @@ package MagicUtils.magicutils.client;
 import MagicUtils.magicutils.client.commands.ModCommands;
 import MagicUtils.magicutils.client.config.MagicUtilsConfig;
 import MagicUtils.magicutils.client.data.MagicUtilsDataHandler;
+import MagicUtils.magicutils.client.data.stackkey.core.StackKeyProvider;
 import MagicUtils.magicutils.client.event.ModEvents;
 import MagicUtils.magicutils.client.ui.custom.screen.ItemScreen;
+import MagicUtils.magicutils.client.utils.EnvironmentDetector;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -15,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 public class MagicUtilsClient implements ClientModInitializer {
 
+    public static StackKeyProvider STACK_KEY_PROVIDER;
     public static MagicUtilsConfig CONFIG = MagicUtilsConfig.get();
     public static final Logger LOGGER = LoggerFactory.getLogger(MagicUtilsClient.class);
     public static boolean ShouldOpenScreen = false;
