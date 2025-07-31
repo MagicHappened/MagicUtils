@@ -21,10 +21,6 @@ jobs:
           java-version: 21
           distribution: temurin
 
-      - name: Print GitHub ref
-        run:
-          echo "This run triggered by ref: $GITHUB_REF"
-
       - name: Build with Gradle
         run: ./gradlew build
 
