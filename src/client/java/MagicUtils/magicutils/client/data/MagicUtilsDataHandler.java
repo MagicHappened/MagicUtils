@@ -7,8 +7,6 @@ import net.minecraft.client.MinecraftClient;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.MessageDigest;
-import java.util.Base64;
 
 public class MagicUtilsDataHandler {
     private static final String FOLDER_NAME = "magicutils_data";
@@ -25,11 +23,11 @@ public class MagicUtilsDataHandler {
     public static Path getCurrentContextSaveDir() {
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.isInSingleplayer()) {
-
-            String levelName = client.getServer().getSaveProperties().getLevelName(); // e.g., "New World"
+            assert client.getServer() != null;
+            String levelName = client.getServer().getSaveProperties().getLevelName();
             return DATA_FOLDER.resolve("singleplayer").resolve(levelName);
         } else if (client.getCurrentServerEntry() != null) {
-            String address = client.getCurrentServerEntry().address; // e.g., "play.example.net:25565"
+            String address = client.getCurrentServerEntry().address;
             String safeName = sanitizeServerAddress(address);
             return DATA_FOLDER.resolve("multiplayer").resolve(safeName);
         }
@@ -39,4 +37,5 @@ public class MagicUtilsDataHandler {
     private static String sanitizeServerAddress(String address) {
         return address.replace(":", "_");
     }
+
 }

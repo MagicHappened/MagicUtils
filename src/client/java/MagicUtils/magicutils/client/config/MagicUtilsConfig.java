@@ -1,6 +1,5 @@
 package MagicUtils.magicutils.client.config;
 import MagicUtils.magicutils.client.MagicUtilsClient;
-import MagicUtils.magicutils.client.config.categories.General;
 import MagicUtils.magicutils.client.config.categories.UI;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -17,12 +16,15 @@ public class MagicUtilsConfig {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static MagicUtilsConfig INSTANCE;
 
-    // Example setting
-    public static Boolean SidebarTooltip = false;
-    public static int searchRange = 50;
-    public static General.SearchPriorityMode searchPriorityMode = General.SearchPriorityMode.NEAREST_FIRST;
-    public static UI.SortingMode sortingMode = UI.SortingMode.Quantity;
-    public static UI.SortingOrder sortingOrder = UI.SortingOrder.Descending;
+    // Config values: non-static now
+    public Boolean sidebarTooltip = false;
+    public int searchRange = 50;
+    public UI.SortingMode sortingMode = UI.SortingMode.Quantity;
+    public UI.SortingOrder sortingOrder = UI.SortingOrder.Descending;
+
+    private MagicUtilsConfig() {
+        // private constructor to prevent direct instantiation outside this class
+    }
 
     public static MagicUtilsConfig get() {
         if (INSTANCE == null) {
@@ -36,8 +38,7 @@ public class MagicUtilsConfig {
             try (FileReader reader = new FileReader(CONFIG_FILE)) {
                 INSTANCE = GSON.fromJson(reader, MagicUtilsConfig.class);
             } catch (IOException e) {
-                MagicUtilsClient.LOGGER.error("Error loading config! printing error:\n{}",(Object) e.getStackTrace());
-
+                MagicUtilsClient.LOGGER.error("Error loading config! printing error:\n{}", (Object) e.getStackTrace());
                 INSTANCE = new MagicUtilsConfig();
             }
         } else {

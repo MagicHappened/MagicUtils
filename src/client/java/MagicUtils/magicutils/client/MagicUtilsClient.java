@@ -4,7 +4,6 @@ import MagicUtils.magicutils.client.commands.ModCommands;
 import MagicUtils.magicutils.client.config.MagicUtilsConfig;
 import MagicUtils.magicutils.client.data.MagicUtilsDataHandler;
 import MagicUtils.magicutils.client.event.ModEvents;
-import MagicUtils.magicutils.client.ui.custom.overlay.ChestOverlayRenderer;
 import MagicUtils.magicutils.client.ui.custom.screen.ItemScreen;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
@@ -33,9 +32,7 @@ public class MagicUtilsClient implements ClientModInitializer {
             if (!MagicUtilsClient.ShouldOpenScreen){ return;}
             client1.setScreen(new ItemScreen(Text.literal("Item Screen")));
         };
-        MinecraftClient.getInstance().execute(() -> {
-            ClientTickEvents.END_CLIENT_TICK.register(ScreenCheckTicker);
-        });
+        MinecraftClient.getInstance().execute(() -> ClientTickEvents.END_CLIENT_TICK.register(ScreenCheckTicker));
 
 
 

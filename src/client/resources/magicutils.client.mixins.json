@@ -7,8 +7,7 @@
     "ClientPlayNetworkHandlerMixin",
     "HandledScreenMixin",
     "OpenScreenS2CPacketAccessor",
-    "ClientPlayerInteractionManagerMixin",
-    "BlockMixin"
+    "ClientPlayerInteractionManagerMixin"
   ],
   "injectors": {
     "defaultRequire": 1

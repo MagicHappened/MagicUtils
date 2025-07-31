@@ -1,13 +1,13 @@
 package MagicUtils.magicutils.client.ui.custom.screen;
 
 import MagicUtils.magicutils.client.MagicUtilsClient;
-import MagicUtils.magicutils.client.config.MagicUtilsConfig;
+import static MagicUtils.magicutils.client.MagicUtilsClient.CONFIG;
+import MagicUtils.magicutils.client.data.StackKey;
 import MagicUtils.magicutils.client.ui.custom.overlay.ChestHighlighter;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.registry.RegistryOps;
+import net.minecraft.component.ComponentMap;
+import net.minecraft.nbt.NbtOps;
 import MagicUtils.magicutils.client.config.categories.UI;
 import MagicUtils.magicutils.client.data.ChestDataStorage;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
@@ -15,19 +15,14 @@ import net.minecraft.client.render.RenderLayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.tooltip.TooltipType;
-import net.minecraft.registry.RegistryWrapper;
-import net.minecraft.text.HoverEvent;
-import net.minecraft.text.Style;
 import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ItemScreen extends Screen {
 
@@ -61,7 +56,8 @@ public class ItemScreen extends Screen {
         searchBox = new TextFieldWidget(this.textRenderer, x + 7, y + 5, boxWidth, boxHeight, Text.literal("Search"));
         searchBox.setChangedListener(text -> {
             filter = text;
-            updateDisplayedItems();
+            if (!filter.isEmpty()) updateDisplayedItems(filter);
+            else updateDisplayedItems();
         });
 
         addSelectableChild(searchBox);
@@ -70,49 +66,43 @@ public class ItemScreen extends Screen {
         updateDisplayedItems();
     }
 
-    private void updateDisplayedItems() {
+    private void updateDisplayedItemsFromMap(Map<StackKey, Integer> aggregated) {
         displayedItems.clear();
         displayedCounts.clear();
+        if (aggregated == null || aggregated.isEmpty()) return;
 
-        MinecraftClient client = MinecraftClient.getInstance();
-        if (client.player == null) return;
+        // could replace explicit declaration with var but meh
+        Stream<Map.Entry<ItemStack,Integer>> entryStream = aggregated.entrySet().stream()
+                .map(entry -> Map.entry(entry.getKey().stack(), entry.getValue()));
 
-        BlockPos playerPos = client.player.getBlockPos();
-
-        var registryManager = client.getNetworkHandler() != null
-                ? client.getNetworkHandler().getRegistryManager()
-                : null;
-        if (registryManager == null) return;
-
-// Directly use registryManager as lookup
-        RegistryWrapper.WrapperLookup lookup = registryManager;
-
-        Map<Item, Integer> aggregated = ChestDataStorage.loadAggregatedItemsWithinRange(
-                playerPos,
-                MagicUtilsConfig.searchRange,
-                lookup,
-                filter
-        );
-
-        Comparator<Map.Entry<Item, Integer>> comparator = switch (MagicUtilsConfig.sortingMode) {
+        Comparator<Map.Entry<ItemStack, Integer>> comparator = switch (CONFIG.sortingMode) {
             case Quantity -> Map.Entry.comparingByValue();
-            case ItemName -> Comparator.comparing(e -> e.getKey().getName().getString());
+            case ItemName -> Comparator
+                    .comparing((Map.Entry<ItemStack, Integer> e) -> e.getKey().getName().getString())
+                    .thenComparing(e -> serializeComponentsToString(e.getKey().getComponents()));
         };
 
-        if (MagicUtilsConfig.sortingOrder == UI.SortingOrder.Descending) {
+        if (CONFIG.sortingOrder == UI.SortingOrder.Descending) {
             comparator = comparator.reversed();
         }
 
-        aggregated.entrySet().stream()
-                .sorted(comparator)
+        entryStream.sorted(comparator)
                 .forEach(entry -> {
-                    ItemStack stack = new ItemStack(entry.getKey());
-                    stack.setCount(1); // render count ourselves, always use 1
+                    ItemStack stack = entry.getKey().copy();
+                    stack.setCount(1);
                     displayedItems.add(stack);
                     displayedCounts.add(entry.getValue());
-                    // displayed items and displayed counts are perfectly ordered so 1 will represent each other
                 });
     }
+    private void updateDisplayedItems() {
+        var allItems = ChestDataStorage.loadItemsWithinRange();
+        updateDisplayedItemsFromMap(allItems);
+    }
+    private void updateDisplayedItems(String filter) {
+        var allItems = ChestDataStorage.loadItemsWithinRange(filter);
+        updateDisplayedItemsFromMap(allItems);
+    }
+
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
@@ -170,7 +160,7 @@ public class ItemScreen extends Screen {
 
         // Tooltip rendering
         if (!hoveredStack.isEmpty()) {
-            if (MagicUtilsConfig.SidebarTooltip) {
+            if (CONFIG.sidebarTooltip) {
                 List<Text> tooltipLines = hoveredStack.getTooltip(Item.TooltipContext.DEFAULT, null, TooltipType.BASIC);
                 int maxWidth = tooltipLines.stream().mapToInt(textRenderer::getWidth).max().orElse(0);
                 int tooltipX = x - maxWidth - 16;
@@ -192,6 +182,16 @@ public class ItemScreen extends Screen {
         return mouseX >= x && mouseX <= x + 16 && mouseY >= y && mouseY <= y + 16;
     }
 
+    private static String serializeComponentsToString(ComponentMap components) {
+        if (components == null) return "";
+        // ComponentMap doesn't have a direct toString that guarantees stability, so convert to NBT then to string:
+        // Use NbtOps to encode the components back to an NBT element, then to string
+        var dynamicResult = ComponentMap.CODEC.encodeStart(NbtOps.INSTANCE, components).result();
+        if (dynamicResult.isEmpty()) return "";
+        var nbtElement = dynamicResult.get(); // NbtElement
+        return nbtElement.toString(); // stable serialized string
+    }
+
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (super.mouseClicked(mouseX, mouseY, button)) return true;
@@ -210,21 +210,6 @@ public class ItemScreen extends Screen {
                 if (isPointWithin((int) mouseX, (int) mouseY, slotX, slotY)) {
                     ItemStack clickedStack = displayedItems.get(index);
                     if (!clickedStack.isEmpty()) {
-                        if (client == null || client.player == null){
-                            MagicUtilsClient.LOGGER.warn("Clicked on screen when client or player was null, how did this even happen?");
-                            return false;
-                        }
-
-                        HoverEvent hoverEvent = new HoverEvent.ShowItem(clickedStack.copy());
-
-                        Text hoverText = clickedStack.getItem().getName().copy()
-                                .setStyle(Style.EMPTY.withColor(Formatting.GOLD).withHoverEvent(hoverEvent));
-
-                        client.player.sendMessage(
-                                Text.literal("Searching for ").formatted(Formatting.WHITE)
-                                        .append(hoverText),
-                                false  // `false` means the message is client-side only and not sent as a system message
-                        );
                         ChestHighlighter.onItemClicked(clickedStack);
                     }
                     return true;

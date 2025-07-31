@@ -1,7 +1,6 @@
 package MagicUtils.magicutils.client.ui.custom.overlay;
 
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.RenderLayer;
@@ -13,6 +12,7 @@ import net.minecraft.util.math.Vec3d;
 import org.joml.Matrix4f;
 
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.Set;
 
 public class ChestOverlayRenderer {
@@ -26,13 +26,14 @@ public class ChestOverlayRenderer {
 
         MatrixStack matrices = context.matrixStack();
         Vec3d camPos = context.camera().getPos();
-        VertexConsumer consumer = context.consumers().getBuffer(RenderLayer.getLines());
+        VertexConsumer consumer = Objects.requireNonNull(context.consumers()).getBuffer(RenderLayer.getLines());
 
         for (Set<BlockPos> blocks : ChestHighlighter.getHighlightedChests()) {
             Box box = createBoxFromPositions(blocks);
             if (box == null) continue;
 
             box = box.expand(0.002);
+            assert matrices != null;
             renderBoxLines(consumer, matrices, box, camPos, 1f, 0f, 0f, 1f);
         }
     }

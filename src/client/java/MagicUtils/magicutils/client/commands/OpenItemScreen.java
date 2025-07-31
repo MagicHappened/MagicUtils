@@ -42,6 +42,7 @@ public class OpenItemScreen {
         MagicUtilsClient.ShouldOpenScreen = true;
 
         source.sendFeedback(Text.literal("Opening ItemScreen for: " + (ItemName.isEmpty() ? "all items (no specific item provided)" : ItemName)));
+
         return 1;
     }
 }

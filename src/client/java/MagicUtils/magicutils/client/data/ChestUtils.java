@@ -1,6 +1,5 @@
 package MagicUtils.magicutils.client.data;
 
-import MagicUtils.magicutils.client.MagicUtilsClient;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.ChestBlock;
 import net.minecraft.block.enums.ChestType;
