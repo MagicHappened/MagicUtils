@@ -12,6 +12,9 @@ public abstract class StackKey {
         this.nbt = nbt;
     }
 
+    public ItemStack getStack() {
+        return stack;
+    }
     public abstract boolean equals(Object o);
     public abstract int hashCode();
 }

@@ -1,6 +1,8 @@
 package MagicUtils.magicutils.client.ui.custom.overlay;
 
+import MagicUtils.magicutils.client.data.Chest;
 import MagicUtils.magicutils.client.data.ChestDataStorage;
+import MagicUtils.magicutils.client.data.stackkey.core.StackKey;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
@@ -8,10 +10,12 @@ import net.minecraft.util.math.BlockPos;
 import java.util.HashSet;
 import java.util.Set;
 
+import static MagicUtils.magicutils.client.MagicUtilsClient.STACK_KEY_PROVIDER;
+
 public class ChestHighlighter {
 
     // Positions to highlight
-    private static Set<Set<BlockPos>> highlightedChests = new HashSet<>();
+    private static Set<Chest> highlightedChests = new HashSet<>();
 
     // Timing controls
     private static long highlightStartTime = 0;
@@ -27,7 +31,7 @@ public class ChestHighlighter {
     public static void onItemClicked(ItemStack stack) {
         if (stack == null || stack.isEmpty()) return;
 
-        highlightedChests = ChestDataStorage.getItemPositions(stack);
+        highlightedChests = ChestDataStorage.getItemPositions(STACK_KEY_PROVIDER.getStackKey(stack));
 
         startHighlighting();
         MinecraftClient.getInstance().setScreen(null); // Close the GUI
@@ -65,7 +69,7 @@ public class ChestHighlighter {
         return isBlinking && visible;
     }
 
-    public static Set<Set<BlockPos>> getHighlightedChests() {
+    public static Set<Chest> getHighlightedChests() {
         return highlightedChests;
     }
 }

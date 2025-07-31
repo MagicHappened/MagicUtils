@@ -131,8 +131,8 @@ public class ChestDataStorage {
         }
     }
 
-    public static @Nullable List<Pair<Set<BlockPos>, List<ItemStack>>> loadChestData() {
-        List<Pair<Set<BlockPos>, List<ItemStack>>> result = new ArrayList<>();
+    public static @Nullable List<ChestData> loadChestData() {
+        List<ChestData> result = new ArrayList<>();
         Path dataFolder = MagicUtilsDataHandler.getCurrentContextSaveDir();
         RegistryWrapper.WrapperLookup lookup = MinecraftClient.getInstance().getNetworkHandler() != null
                 ? MinecraftClient.getInstance().getNetworkHandler().getRegistryManager()
@@ -166,7 +166,7 @@ public class ChestDataStorage {
                     NbtList itemsList = root.getList("Items").orElse(null);
                     if (itemsList == null) return;
 
-                    List<ItemStack> items = new ArrayList<>();
+                    List<StackKey> keys = new ArrayList<>();
                     for (NbtElement element : itemsList) {
                         if (!(element instanceof NbtCompound slotCompound)) continue;
                         if (!slotCompound.contains("Item")) continue;
@@ -175,10 +175,13 @@ public class ChestDataStorage {
                         if (itemCompound == null) continue;
 
                         Optional<ItemStack> optionalStack = ItemStack.CODEC.parse(registryOps, itemCompound).result();
-                        optionalStack.ifPresent(items::add);
-                    }
+                        optionalStack.ifPresent(stack -> {
+                            StackKey key = STACK_KEY_PROVIDER.getStackKey(stack);
+                            keys.add(key);
+                        });
 
-                    result.add(Pair.of(positions, items));
+                    }
+                    result.add(new ChestData(new Chest(positions),keys));
 
                 } catch (IOException e) {
                     MagicUtilsClient.LOGGER.error("Error reading chest file {}: {}", path, e);
@@ -197,23 +200,19 @@ public class ChestDataStorage {
         assert MinecraftClient.getInstance().player != null;
         BlockPos origin = MinecraftClient.getInstance().player.getBlockPos();
 
-        List<Pair<Set<BlockPos>, List<ItemStack>>> chestData = loadChestData();
+        List<ChestData> allChestData = loadChestData();
 
-        assert chestData != null;
-        for (Pair<Set<BlockPos>, List<ItemStack>> pair : chestData) {
-            Set<BlockPos> positions = pair.getLeft();
+        assert allChestData != null;
+        for (ChestData chestData : allChestData) {
+            Chest chest = chestData.getChest();
 
             // Only process groups within range
-            boolean withinRange = positions.stream().anyMatch(pos -> pos.isWithinDistance(origin, CONFIG.searchRange));
+            boolean withinRange = chest.getPositions().stream().anyMatch(pos -> pos.isWithinDistance(origin, CONFIG.searchRange));
             if (!withinRange) continue;
 
-            List<ItemStack> items = pair.getRight();
-            for (ItemStack stack : items) {
-                if (stack.isEmpty()) continue;
-
-
-                StackKey key = STACK_KEY_PROVIDER.getStackKey(stack);
-                aggregated.merge(key, stack.getCount(), Integer::sum);
+            List<StackKey> items = chestData.getItems();
+            for (StackKey key : items) {
+                aggregated.merge(key, key.getStack().getCount(), Integer::sum);
             }
         }
 
@@ -227,7 +226,7 @@ public class ChestDataStorage {
         Map<StackKey, Integer> filtered = new HashMap<>();
 
         for (var entry : raw.entrySet()) {
-            ItemStack stack = entry.getKey();
+            ItemStack stack = entry.getKey().getStack();
             int count = entry.getValue();
 
             boolean matches;
@@ -250,73 +249,24 @@ public class ChestDataStorage {
         return filtered;
     }
 
-    public static Set<Set<BlockPos>> getItemPositions(ItemStack filterStack) {
-        Set<Set<BlockPos>> result = new HashSet<>();
-        if (filterStack == null || filterStack.isEmpty()) return result;
+    public static Set<Chest> getItemPositions(StackKey givenKey) {
+        Set<Chest> result = new HashSet<>();
+        ItemStack filterStack = givenKey.getStack();
+        if (filterStack.isEmpty()) return result;
 
-        StackKey filterKey = new StackKey(filterStack);
-        Path dataFolder = MagicUtilsDataHandler.getCurrentContextSaveDir();
+        List<ChestData> allChestData = loadChestData();
+        if (allChestData == null) return result;
 
-        if (!Files.exists(dataFolder)) return result;
-
-        try (var files = Files.list(dataFolder)) {
-            files.filter(path -> path.toString().endsWith(".dat")).forEach(path -> {
-                String filename = path.getFileName().toString().replace(".dat", "");
-
-                List<BlockPos> positions = Arrays.stream(filename.split("__"))
-                        .map(s -> {
-                            String[] parts = s.split(",");
-                            if (parts.length != 3) return null;
-                            try {
-                                return new BlockPos(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]), Integer.parseInt(parts[2]));
-                            } catch (NumberFormatException e) {
-                                return null;
-                            }
-                        })
-                        .filter(Objects::nonNull)
-                        .toList();
-
-                if (positions.isEmpty()) return;
-
-                try (var in = Files.newInputStream(path)) {
-                    RegistryWrapper.WrapperLookup lookup = MinecraftClient.getInstance().getNetworkHandler() != null
-                            ? MinecraftClient.getInstance().getNetworkHandler().getRegistryManager()
-                            : null;
-                    if (lookup == null) return;
-
-                    RegistryOps<NbtElement> registryOps = RegistryOps.of(NbtOps.INSTANCE, lookup);
-
-                    NbtCompound root = NbtIo.readCompressed(in, net.minecraft.nbt.NbtSizeTracker.ofUnlimitedBytes());
-                    NbtList items = root.getList("Items").orElse(null);
-
-                    if (items == null) return;
-
-                    for (NbtElement element : items) {
-                        if (!(element instanceof NbtCompound slotCompound)) continue;
-                        if (!slotCompound.contains("Item")) continue;
-
-                        NbtCompound itemCompound = slotCompound.getCompound("Item").orElse(null);
-                        if (itemCompound == null) continue;
-
-                        Optional<ItemStack> optionalStack = ItemStack.CODEC.parse(registryOps, itemCompound).result();
-                        if (optionalStack.isEmpty()) continue;
-
-                        ItemStack stack = optionalStack.get();
-                        if (stack.isEmpty()) continue;
-
-                        StackKey key = new StackKey(stack);
-                        if (key.equals(filterKey)) {
-                            result.add(Set.copyOf(positions));
-                            break; // no need to continue scanning this file
-                        }
-                    }
-
-                } catch (IOException e) {
-                    MagicUtilsClient.LOGGER.error("Error reading chest file {}: {}", path, e);
+        // For every chestData entry...
+        for (ChestData chestData : allChestData) {
+            // Check if it contains the givenKey
+            for (StackKey key : chestData.getItems()) {
+                if (key.equals(givenKey)) {
+                    // Add this chest’s positions once
+                    result.add(new Chest(chestData.getChest().getPositions()));
+                    break; // stop scanning items in *this* chest, but continue with next chest
                 }
-            });
-        } catch (IOException e) {
-            MagicUtilsClient.LOGGER.error("Error listing chest data files", e);
+            }
         }
 
         return result;
