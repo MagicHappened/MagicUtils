@@ -13,15 +13,10 @@ public class HypixelStackKeyProvider implements StackKeyProvider {
     public StackKey getStackKey(ItemStack stack) {
         ItemStack copy = stack.copy();
         NbtCompound fullNbt = encodeComponentsToNbt(copy);
-        NbtCompound normalized = getFilteredData(fullNbt);
 
-        return new HypixelStackKey(copy, fullNbt, normalized);
+        return new HypixelStackKey(copy, fullNbt);
     }
 
-    private NbtCompound getFilteredData(NbtCompound tag) {
-        MagicUtilsClient.LOGGER.info("Tag: {}",tag);
-        return tag;
-    }
 
     @Override
     public boolean areEqual(StackKey key1, StackKey key2) {

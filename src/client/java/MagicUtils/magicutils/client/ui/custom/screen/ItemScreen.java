@@ -115,7 +115,6 @@ public class ItemScreen extends Screen {
 
         ItemStack hoveredStack = ItemStack.EMPTY;
 
-        // First pass: draw items only
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < columns; col++) {
                 int index = row * columns + col;
@@ -129,7 +128,6 @@ public class ItemScreen extends Screen {
             }
         }
 
-        // Second pass: draw counts on top of items with higher z-level
         context.getMatrices().push();
         context.getMatrices().translate(0, 0, 300); // Higher z-level than items
 
