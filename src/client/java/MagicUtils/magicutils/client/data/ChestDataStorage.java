@@ -25,7 +25,6 @@ import static MagicUtils.magicutils.client.MagicUtilsClient.STACK_KEY_PROVIDER;
 
 public class ChestDataStorage {
 
-
     private static Path getDataFolder() {
         return MagicUtilsDataHandler.getCurrentContextSaveDir();
     }
