@@ -1,0 +1,42 @@
+name: Build and Tag
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-and-tag:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: temurin
+
+      - name: Build with Gradle
+        run: ./gradlew build
+
+      - name: Create Tag from gradle.properties
+        id: tag
+        run: |
+          version=$(grep '^version=' gradle.properties | cut -d '=' -f2)
+          echo "Version from gradle.properties: $version"
+          
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+
+          # Check if tag exists to avoid duplicate tag error
+          if git rev-parse "v$version" >/dev/null 2>&1; then
+            echo "Tag v$version already exists, skipping tag creation."
+          else
+            git tag "v$version"
+            git push origin "v$version"
+          fi
+
+          echo "new_tag=v$version" >> $GITHUB_OUTPUT
