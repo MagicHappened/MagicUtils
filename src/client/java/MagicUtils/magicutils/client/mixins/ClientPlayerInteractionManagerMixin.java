@@ -19,6 +19,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.Set;
+
 @Mixin(ClientPlayerInteractionManager.class)
 public class ClientPlayerInteractionManagerMixin {
 
@@ -26,7 +28,9 @@ public class ClientPlayerInteractionManagerMixin {
     private void onInteractBlock(ClientPlayerEntity player, Hand hand, BlockHitResult hitResult, CallbackInfoReturnable<ActionResult> cir) {
         ChestUtils.lastInteractedChest = hitResult.getBlockPos();
         if (ChestHighlighter.isBlinking){
-            ChestUtils.openedChest = new Chest(ChestUtils.getConnectedChestPositions(hitResult.getBlockPos()).positions);
+            Chest pos = ChestUtils.getConnectedChestPositions(hitResult.getBlockPos());
+            if (pos == null) return;
+            ChestUtils.openedChest = new Chest(pos.positions);
         }
     }
 

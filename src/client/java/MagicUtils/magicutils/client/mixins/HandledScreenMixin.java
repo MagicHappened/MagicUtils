@@ -97,8 +97,8 @@ public class HandledScreenMixin {
                     if (index < size) {
                         int row = index / cols;
                         int col = index % cols;
-                        int xPos = this.x + 7 + col * 18;
-                        int yPos = this.y + 17 + row * 18;
+                        int xPos = this.x + 8 + col * 18;
+                        int yPos = this.y + 18 + row * 18;
                         context.fill(xPos, yPos, xPos + 16, yPos + 16, 0x80FF0000);
                     }
                 }
