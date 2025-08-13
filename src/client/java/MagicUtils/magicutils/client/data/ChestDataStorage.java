@@ -2,7 +2,6 @@ package MagicUtils.magicutils.client.data;
 
 import MagicUtils.magicutils.client.MagicUtilsClient;
 import MagicUtils.magicutils.client.data.stackkey.core.StackKey;
-import MagicUtils.magicutils.client.data.stackkey.core.StackKeyProvider;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.tooltip.TooltipType;
@@ -10,7 +9,6 @@ import net.minecraft.nbt.*;
 import net.minecraft.registry.RegistryOps;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.text.Text;
-import org.apache.commons.lang3.tuple.Pair;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
@@ -30,8 +28,8 @@ public class ChestDataStorage {
         return MagicUtilsDataHandler.getCurrentContextSaveDir();
     }
 
-    public static void addChestContents(List<BlockPos> positions, NbtList contents) {
-        String key = getKeyFromPositions(positions);
+    public static void addChestContents(Chest chest, NbtList contents) {
+        String key = getKeyFromPositions(chest);
         saveChestData(key, contents);
     }
 
@@ -131,6 +129,8 @@ public class ChestDataStorage {
         }
     }
 
+    // 1. Core logic: loads all items in range (no filtering)
+
     public static @Nullable List<ChestData> loadChestData() {
         List<ChestData> result = new ArrayList<>();
         Path dataFolder = MagicUtilsDataHandler.getCurrentContextSaveDir();
@@ -166,26 +166,32 @@ public class ChestDataStorage {
                     NbtList itemsList = root.getList("Items").orElse(null);
                     if (itemsList == null) return;
 
-                    List<StackKey> keys = new ArrayList<>();
+                    List<ChestSlot> slots = new ArrayList<>();
                     for (NbtElement element : itemsList) {
                         if (!(element instanceof NbtCompound slotCompound)) continue;
-                        if (!slotCompound.contains("Item")) continue;
 
-                        NbtCompound itemCompound = slotCompound.getCompound("Item").orElse(null);
-                        if (itemCompound == null) continue;
+                        // Make sure it contains both Item and Slot
+                        if (!slotCompound.contains("Item") || !slotCompound.contains("Slot")) continue;
+
+                        int slotIndex = slotCompound.getInt("Slot").orElseThrow(() -> new IllegalStateException("Missing Slot in chest data"));
+                        NbtCompound itemCompound = slotCompound.getCompound("Item").orElseThrow(
+                                () -> new IllegalStateException("Missing Item NBT in chest data")
+                        );
 
                         Optional<ItemStack> optionalStack = ItemStack.CODEC.parse(registryOps, itemCompound).result();
                         optionalStack.ifPresent(stack -> {
                             StackKey key = STACK_KEY_PROVIDER.getStackKey(stack);
-                            keys.add(key);
+                            // create ChestSlot with stack key and slot index
+                            slots.add(new ChestSlot(key, slotIndex));
                         });
-
                     }
-                    result.add(new ChestData(new Chest(positions),keys));
+
+                    result.add(new ChestData(positions, slots));
 
                 } catch (IOException e) {
                     MagicUtilsClient.LOGGER.error("Error reading chest file {}: {}", path, e);
                 }
+
             });
         } catch (IOException e) {
             MagicUtilsClient.LOGGER.error("Error listing chest data files", e);
@@ -193,8 +199,6 @@ public class ChestDataStorage {
 
         return result;
     }
-
-    // 1. Core logic: loads all items in range (no filtering)
     public static Map<StackKey, Integer> loadItemsWithinRange() {
         Map<StackKey, Integer> aggregated = new HashMap<>();
         assert MinecraftClient.getInstance().player != null;
@@ -204,13 +208,15 @@ public class ChestDataStorage {
 
         assert allChestData != null;
         for (ChestData chestData : allChestData) {
-            Chest chest = chestData.getChest();
-
+            Chest chest = new Chest(chestData.positions);
             // Only process groups within range
-            boolean withinRange = chest.getPositions().stream().anyMatch(pos -> pos.isWithinDistance(origin, CONFIG.searchRange));
+            boolean withinRange = chest.positions.stream().anyMatch(pos -> pos.isWithinDistance(origin, CONFIG.searchRange));
             if (!withinRange) continue;
 
-            List<StackKey> items = chestData.getItems();
+            List<StackKey> items = chestData.getContents().stream()
+                    .map(ChestSlot::getStack) // extract the StackKey from each ChestSlot
+                    .toList();
+
             for (StackKey key : items) {
                 aggregated.merge(key, key.getStack().getCount(), Integer::sum);
             }
@@ -249,34 +255,36 @@ public class ChestDataStorage {
         return filtered;
     }
 
-    public static Set<Chest> getItemPositions(StackKey givenKey) {
-        Set<Chest> result = new HashSet<>();
+    public static List<HighlightTarget> getHighlightTargets(StackKey givenKey) {
+        List<HighlightTarget> results = new ArrayList<>();
         ItemStack filterStack = givenKey.getStack();
-        if (filterStack.isEmpty()) return result;
+        if (filterStack.isEmpty()) return results;
 
         List<ChestData> allChestData = loadChestData();
-        if (allChestData == null) return result;
+        if (allChestData == null) return results;
 
-        // For every chestData entry...
         for (ChestData chestData : allChestData) {
-            // Check if it contains the givenKey
-            for (StackKey key : chestData.getItems()) {
-                if (key.equals(givenKey)) {
-                    // Add this chest’s positions once
-                    result.add(new Chest(chestData.getChest().getPositions()));
-                    break; // stop scanning items in *this* chest, but continue with next chest
+            List<Integer> matchingSlots = new ArrayList<>();
+
+            // Iterate over ChestSlot objects instead of raw StackKey
+            for (ChestSlot slot : chestData.getContents()) {
+                if (slot.getStack().equals(givenKey)) {
+                    matchingSlots.add(slot.getSlotIndex()); // use the actual slot index
                 }
+            }
+
+            if (!matchingSlots.isEmpty()) {
+                results.add(new HighlightTarget(chestData, matchingSlots));
             }
         }
 
-        return result;
+        return results;
     }
 
 
 
-
-    private static String getKeyFromPositions(List<BlockPos> positions) {
-        List<String> sorted = positions.stream()
+    private static String getKeyFromPositions(Chest chest) {
+        List<String> sorted = chest.positions.stream()
                 .map(pos -> pos.getX() + "," + pos.getY() + "," + pos.getZ())
                 .sorted()
                 .toList();

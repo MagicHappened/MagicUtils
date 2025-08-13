@@ -4,10 +4,10 @@
   "package": "MagicUtils.magicutils.client.mixins",
   "compatibilityLevel": "JAVA_21",
   "client": [
+    "ClientPlayerInteractionManagerMixin",
     "ClientPlayNetworkHandlerMixin",
     "HandledScreenMixin",
-    "OpenScreenS2CPacketAccessor",
-    "ClientPlayerInteractionManagerMixin"
+    "OpenScreenS2CPacketAccessor"
   ],
   "injectors": {
     "defaultRequire": 1
