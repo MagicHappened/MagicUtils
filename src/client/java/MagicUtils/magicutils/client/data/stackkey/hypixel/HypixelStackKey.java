@@ -8,8 +8,8 @@ import net.minecraft.nbt.NbtCompound;
 
 public class HypixelStackKey extends StackKey {
     private NbtCompound filteredNbt;
-    private String skyblockId;
-    private NbtCompound enchantsNbt;
+    private final String skyblockId;
+    private final NbtCompound enchantsNbt;
 
     protected HypixelStackKey(ItemStack stack, NbtCompound nbt) {
         super(stack.copy(), nbt);

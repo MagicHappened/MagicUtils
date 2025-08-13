@@ -1,7 +1,10 @@
 package MagicUtils.magicutils.client.mixins;
 
+import MagicUtils.magicutils.client.MagicUtilsClient;
+import MagicUtils.magicutils.client.data.Chest;
 import MagicUtils.magicutils.client.data.ChestDataStorage;
 import MagicUtils.magicutils.client.data.ChestUtils;
+import MagicUtils.magicutils.client.ui.custom.overlay.ChestHighlighter;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.ChestBlock;
 import net.minecraft.client.MinecraftClient;
@@ -22,6 +25,9 @@ public class ClientPlayerInteractionManagerMixin {
     @Inject(method = "interactBlock", at = @At("HEAD"))
     private void onInteractBlock(ClientPlayerEntity player, Hand hand, BlockHitResult hitResult, CallbackInfoReturnable<ActionResult> cir) {
         ChestUtils.lastInteractedChest = hitResult.getBlockPos();
+        if (ChestHighlighter.isBlinking){
+            ChestUtils.openedChest = new Chest(ChestUtils.getConnectedChestPositions(hitResult.getBlockPos()).positions);
+        }
     }
 
     @Inject(method = "breakBlock", at = @At("HEAD"))
