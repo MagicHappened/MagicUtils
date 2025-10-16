@@ -1,5 +1,6 @@
 package MagicUtils.magicutils.client.data;
 
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.ChestBlock;
 import net.minecraft.block.enums.ChestType;
@@ -17,9 +18,10 @@ public class ChestUtils {
 
     // Track the last chest block position the player interacted with
     public static BlockPos lastInteractedChest = null;
+    public static Chest openedChest = null;
 
     // Map from sync IDs to the chest positions they correspond to (single or double chest)
-    public static final Map<Integer, List<BlockPos>> syncIdToChestPositions = new HashMap<>();
+    public static final Map<Integer, Chest> syncIdToChestPositions = new HashMap<>();
 
     private static Direction getChestConnectionOffset(Direction facing, ChestType type) {
         return switch (type) {
@@ -39,26 +41,26 @@ public class ChestUtils {
         };
     }
 
-    public static List<BlockPos> getConnectedChestPositions(BlockPos basePos) {
+    public static Chest getConnectedChestPositions(BlockPos basePos) {
         MinecraftClient client = MinecraftClient.getInstance();
         ClientWorld world = client.world;
-        if (world == null || basePos == null) return List.of();
+        if (world == null || basePos == null) return null;
 
         BlockState state = world.getBlockState(basePos);
-        if (!(state.getBlock() instanceof ChestBlock)) return List.of();
+        if (!(state.getBlock() instanceof ChestBlock)) return null;
 
         if (!state.contains(Properties.CHEST_TYPE) || !state.contains(Properties.HORIZONTAL_FACING)) {
-            return List.of(basePos);
+            return new Chest(basePos);
         }
 
         ChestType type = state.get(ChestBlock.CHEST_TYPE);
         Direction facing = state.get(ChestBlock.FACING);
 
-        if (type == ChestType.SINGLE) return List.of(basePos);
+        if (type == ChestType.SINGLE) return new Chest(basePos);
 
         Direction offset = getChestConnectionOffset(facing, type);
         BlockPos otherPos = basePos.offset(offset);
 
-        return List.of(basePos, otherPos);
+        return new Chest(basePos, otherPos);
     }
 }

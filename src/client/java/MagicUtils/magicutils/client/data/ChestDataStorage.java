@@ -182,6 +182,7 @@ public class ChestDataStorage {
                 } catch (IOException e) {
                     MagicUtilsClient.LOGGER.error("Error reading chest file {}: {}", path, e);
                 }
+
             });
         } catch (IOException e) {
             MagicUtilsClient.LOGGER.error("Error listing chest data files", e);

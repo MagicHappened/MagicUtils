@@ -21,6 +21,9 @@ public class MagicUtilsConfig {
     public int searchRange = 50;
     public UI.SortingMode sortingMode = UI.SortingMode.Quantity;
     public UI.SortingOrder sortingOrder = UI.SortingOrder.Descending;
+    public long DURATION_MS = 5000;
+    public long BLINK_MS = 500;
+    public Boolean ItemHighlight = true;
 
     private MagicUtilsConfig() {
         // private constructor to prevent direct instantiation outside this class

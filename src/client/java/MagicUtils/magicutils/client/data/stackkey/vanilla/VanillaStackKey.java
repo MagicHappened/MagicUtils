@@ -20,7 +20,6 @@ public class VanillaStackKey extends StackKey {
 
     public VanillaStackKey(ItemStack stack) {
         super(stack.copy(), encodeComponentsToNbt(stack));
-        MagicUtilsClient.LOGGER.info("Constructed VanillaStackKey for item: {}", stack.getItem());
     }
     // Encoder stays here for reuse
 
