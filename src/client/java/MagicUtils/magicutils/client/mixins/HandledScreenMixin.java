@@ -30,7 +30,7 @@ import java.util.Objects;
 
 import static MagicUtils.magicutils.client.data.ChestUtils.openedChest;
 
-@Mixin(HandledScreen.class)
+@Mixin(value = HandledScreen.class, priority = 2000)
 public class HandledScreenMixin {
 
 
@@ -83,8 +83,10 @@ public class HandledScreenMixin {
         }
     }
 
+
     @Inject(method = "render", at = @At("TAIL"))
     private void onRender(DrawContext context, int mouseX, int mouseY, float deltaTicks, CallbackInfo ci) {
+
         if (!ChestHighlighter.isBlinking) return;
         if (openedChest == null) return;
 
@@ -104,6 +106,7 @@ public class HandledScreenMixin {
                 }
             }
         }
+
     }
 
 

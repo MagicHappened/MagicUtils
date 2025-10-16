@@ -10,19 +10,19 @@ import net.minecraft.registry.RegistryOps;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
-import org.jetbrains.annotations.Nullable;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static MagicUtils.magicutils.client.MagicUtilsClient.CONFIG;
-import static MagicUtils.magicutils.client.MagicUtilsClient.STACK_KEY_PROVIDER;
+import static MagicUtils.magicutils.client.MagicUtilsClient.*;
 
 public class ChestDataStorage {
-
+    public static List<ChestData> cachedItems = new ArrayList<>();
     private static Path getDataFolder() {
         return MagicUtilsDataHandler.getCurrentContextSaveDir();
     }
@@ -91,13 +91,11 @@ public class ChestDataStorage {
 
                             root.put("Items", filteredItems);
 
-                            // Save new single chest file
                             Path newFile = dataFolder.resolve(newKey + ".dat");
                             try (var out = Files.newOutputStream(newFile)) {
                                 NbtIo.writeCompressed(root, out);
                             }
 
-                            // Delete old double chest file
                             Files.deleteIfExists(path);
 
                         } catch (IOException e) {
@@ -107,6 +105,7 @@ public class ChestDataStorage {
         } catch (IOException e) {
             MagicUtilsClient.LOGGER.error("Failed to list chest data folder during chest break handling", e);
         }
+        CompletableFuture.runAsync(ChestDataStorage::loadChestData);
     }
 
     private static void saveChestData(String key, NbtList contents) {
@@ -126,18 +125,17 @@ public class ChestDataStorage {
         } catch (IOException e) {
             MagicUtilsClient.LOGGER.error("Failed to save chest data for key {}: {}", key, e);
         }
+        CompletableFuture.runAsync(ChestDataStorage::loadChestData);
     }
 
-    // 1. Core logic: loads all items in range (no filtering)
-
-    public static @Nullable List<ChestData> loadChestData() {
+    public static void loadChestData() {
         List<ChestData> result = new ArrayList<>();
         Path dataFolder = MagicUtilsDataHandler.getCurrentContextSaveDir();
         RegistryWrapper.WrapperLookup lookup = MinecraftClient.getInstance().getNetworkHandler() != null
                 ? MinecraftClient.getInstance().getNetworkHandler().getRegistryManager()
                 : null;
-        if (lookup == null) return null;
-        if (!Files.exists(dataFolder)) return result;
+        if (lookup == null) return;
+        if (!Files.exists(dataFolder)) return;
 
         try (var files = Files.list(dataFolder)) {
             files.filter(path -> path.toString().endsWith(".dat")).forEach(path -> {
@@ -196,14 +194,14 @@ public class ChestDataStorage {
             MagicUtilsClient.LOGGER.error("Error listing chest data files", e);
         }
 
-        return result;
+        cachedItems = new ArrayList<>(result);
     }
-    public static Map<StackKey, Integer> loadItemsWithinRange() {
+    public static Map<StackKey, Integer> getItemsWithinRange() {
         Map<StackKey, Integer> aggregated = new HashMap<>();
         assert MinecraftClient.getInstance().player != null;
         BlockPos origin = MinecraftClient.getInstance().player.getBlockPos();
 
-        List<ChestData> allChestData = loadChestData();
+        List<ChestData> allChestData = cachedItems;
 
         assert allChestData != null;
         for (ChestData chestData : allChestData) {
@@ -223,43 +221,14 @@ public class ChestDataStorage {
 
         return aggregated;
     }
-    public static Map<StackKey, Integer> loadItemsWithinRange(
-            String filter
-    ) {
-        Map<StackKey, Integer> raw = loadItemsWithinRange();
-        String loweredFilter = filter.toLowerCase();
-        Map<StackKey, Integer> filtered = new HashMap<>();
 
-        for (var entry : raw.entrySet()) {
-            ItemStack stack = entry.getKey().getStack();
-            int count = entry.getValue();
-
-            boolean matches;
-
-            if (loweredFilter.charAt(0) == '#') {
-                String tooltipQuery = loweredFilter.substring(1);
-                List<Text> tooltipLines = stack.getTooltip(null, null, TooltipType.BASIC);
-                matches = tooltipLines.stream()
-                        .map(text -> text.getString().toLowerCase())
-                        .anyMatch(line -> line.contains(tooltipQuery));
-            } else {
-                matches = stack.getItem().getName().getString().toLowerCase().contains(loweredFilter);
-            }
-
-            if (matches) {
-                filtered.put(entry.getKey(), count);
-            }
-        }
-
-        return filtered;
-    }
 
     public static List<HighlightTarget> getHighlightTargets(StackKey givenKey) {
         List<HighlightTarget> results = new ArrayList<>();
         ItemStack filterStack = givenKey.getStack();
         if (filterStack.isEmpty()) return results;
 
-        List<ChestData> allChestData = loadChestData();
+        List<ChestData> allChestData = cachedItems;
         if (allChestData == null) return results;
 
         for (ChestData chestData : allChestData) {

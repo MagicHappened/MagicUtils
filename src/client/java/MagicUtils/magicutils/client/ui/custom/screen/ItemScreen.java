@@ -4,6 +4,7 @@ import MagicUtils.magicutils.client.MagicUtilsClient;
 import static MagicUtils.magicutils.client.MagicUtilsClient.CONFIG;
 import MagicUtils.magicutils.client.data.stackkey.core.StackKey;
 import MagicUtils.magicutils.client.ui.custom.overlay.ChestHighlighter;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.component.ComponentMap;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtOps;
@@ -18,11 +19,10 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.tooltip.TooltipType;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class ItemScreen extends Screen {
@@ -30,6 +30,7 @@ public class ItemScreen extends Screen {
     private static final Identifier CHEST_TEXTURE = Identifier.of("minecraft", "textures/gui/container/generic_54.png");
     private final List<ItemStack> displayedItems = new ArrayList<>();
     private final List<Integer> displayedCounts = new ArrayList<>();
+    private final Map<StackKey, Integer> currentData = ChestDataStorage.getItemsWithinRange();
 
     private final int rows = 6;
     private final int columns = 9;
@@ -67,13 +68,46 @@ public class ItemScreen extends Screen {
         updateDisplayedItems();
     }
 
-    private void updateDisplayedItemsFromMap(Map<StackKey, Integer> displayData) {
+
+    private void updateDisplayedItems() {
+        updateDisplayedItems(null);
+    }
+    private void updateDisplayedItems(@Nullable String filter) {
         displayedItems.clear();
         displayedCounts.clear();
-        if (displayData == null || displayData.isEmpty()) return;
+        if (currentData.isEmpty()) return;
+
+        Map<StackKey, Integer> filteredData;
+
+        if (filter != null && !filter.isEmpty()) {
+            filteredData = currentData.entrySet().stream()
+                    .filter(entry -> {
+                        StackKey key = entry.getKey();
+                        ItemStack stack = key.getStack();
+                        String lowerFilter = filter.toLowerCase();
+
+                        if (filter.startsWith("#")) {
+                            List<Text> tooltip = stack.getTooltip(Item.TooltipContext.DEFAULT, MinecraftClient.getInstance().player, TooltipType.BASIC);
+
+                            for (Text line : tooltip) {
+                                if (line.getString().toLowerCase().contains(lowerFilter.substring(1))) {
+                                    return true;
+                                }
+                            }
+                            return false;
+                        } else {
+                            String name = stack.getName().getString().toLowerCase();
+                            return name.contains(lowerFilter);
+                        }
+                    })
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        } else {
+            filteredData = currentData;
+        }
+
 
         // could replace explicit declaration with var but meh
-        Stream<Map.Entry<StackKey,Integer>> entryStream = displayData.entrySet().stream()
+        Stream<Map.Entry<StackKey,Integer>> entryStream = filteredData.entrySet().stream()
                 .map(entry -> Map.entry(entry.getKey(), entry.getValue()));
 
         Comparator<Map.Entry<StackKey, Integer>> comparator = switch (CONFIG.sortingMode) {
@@ -93,14 +127,7 @@ public class ItemScreen extends Screen {
                     displayedItems.add(stack);
                     displayedCounts.add(entry.getValue());
                 });
-    }
-    private void updateDisplayedItems() {
-        var allItems = ChestDataStorage.loadItemsWithinRange();
-        updateDisplayedItemsFromMap(allItems);
-    }
-    private void updateDisplayedItems(String filter) {
-        var allItems = ChestDataStorage.loadItemsWithinRange(filter);
-        updateDisplayedItemsFromMap(allItems);
+
     }
 
 
@@ -115,6 +142,9 @@ public class ItemScreen extends Screen {
 
         ItemStack hoveredStack = ItemStack.EMPTY;
 
+        if (displayedItems.isEmpty()){
+            return;
+        }
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < columns; col++) {
                 int index = row * columns + col;
