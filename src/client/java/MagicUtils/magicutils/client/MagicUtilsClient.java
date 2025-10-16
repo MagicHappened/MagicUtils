@@ -27,6 +27,8 @@ public class MagicUtilsClient implements ClientModInitializer {
         MagicUtilsConfig.load();
         MagicUtilsDataHandler.init();
 
+
+
         ClientCommandRegistrationCallback.EVENT.register(ModCommands::registerAll);
         LOGGER.info("MagicUtils loaded successfully.");
 
